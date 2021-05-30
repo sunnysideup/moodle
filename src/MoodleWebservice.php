@@ -103,12 +103,12 @@ class MoodleWebservice {
 
         // json has been parsed
         if ($authjson) {
-            if (isset($authjson->error)) {
+            if (property_exists($authjson, 'error') && $authjson->error !== null) {
                 MoodleWebservice::$errors [] = $authjson->error;
                 return null;
             }
             // success!
-            if (isset($authjson->token)) {
+            if (property_exists($authjson, 'token') && $authjson->token !== null) {
                 MoodleWebservice::$instance = new static();
                 MoodleWebservice::$token = $authjson->token;
                 return MoodleWebservice::$instance;
@@ -135,9 +135,9 @@ class MoodleWebservice {
         $urltype = self::config()->get('authentication');
         if (Director::isTest()) {
             return $urltype['locationTest'];
-        } else if (Director::isDev()) {
+        } elseif (Director::isDev()) {
             return $urltype['locationDev'];
-        } else if (Director::isLive()) {
+        } elseif (Director::isLive()) {
             return $urltype['locationLive'];
         }
         return '';
@@ -165,17 +165,17 @@ class MoodleWebservice {
         }
 
         $options['RETURNTRANSFER'] = 1;
-        if($method == 'POST') {
+        if ($method == 'POST') {
             return new MoodleResponse($this->post($url, $params, $options), $this->error);
-        } else if($method == 'GET') {
+        } elseif ($method == 'GET') {
             return new MoodleResponse($this->get($url, $params, $options), $this->error);
-        } else if($method == 'PUT') {
+        } elseif ($method == 'PUT') {
             return new MoodleResponse($this->put($url, $params, $options), $this->error);
-        } else if($method == 'DELETE') {
+        } elseif ($method == 'DELETE') {
             return new MoodleResponse($this->delete($url, $options), $this->error);
-        } else if($method == 'TRACE') {
+        } elseif ($method == 'TRACE') {
             return new MoodleResponse($this->trace($url, $options), $this->error);
-        } else if($method == 'OPTIONS') {
+        } elseif ($method == 'OPTIONS') {
             return new MoodleResponse($this->options($url, $options), $this->error);
         }
         return new MoodleResponse("", 'method invalid');
@@ -186,26 +186,6 @@ class MoodleWebservice {
      * *Singleton* via the 'connect' operator from outside of this class.
      */
     protected function __construct() {
-
-    }
-
-    /**
-     * Private clone method to prevent cloning of the instance of the
-     * *Singleton* instance.
-     *
-     * @return void
-     */
-    private function __clone() {
-
-    }
-
-    /**
-     * Private unserialize method to prevent unserializing of the *Singleton*
-     * instance.
-     *
-     * @return void
-     */
-    private function __wakeup() {
 
     }
 
@@ -325,7 +305,7 @@ class MoodleWebservice {
      * @return int The strlen of the header
      */
     private function formatHeader($ch, $header) {
-        $this->count++;
+        ++$this->count;
         if (strlen($header) > 2) {
             list($key, $value) = explode(" ", rtrim($header, "\r\n"), 2);
             $key = rtrim($key, ':');
@@ -368,7 +348,9 @@ class MoodleWebservice {
         }
         $this->setopt($options);
         // reset before set options
-        curl_setopt($curl, CURLOPT_HEADERFUNCTION, array(&$this, 'formatHeader'));
+        curl_setopt($curl, CURLOPT_HEADERFUNCTION, function ($ch, string $header) : int {
+            return $this->formatHeader($ch, $header);
+        });
         // set headers
         if (empty($this->header)) {
             $this->setHeader(array(
@@ -426,9 +408,9 @@ class MoodleWebservice {
         $handles = array();
         $results = array();
         $main = curl_multi_init();
-        for ($i = 0; $i < $count; $i++) {
+        for ($i = 0; $i < $count; ++$i) {
             $url = $requests[$i];
-            foreach ($url as $n => $v) {
+            foreach (array_keys($url) as $n) {
                 $options[$n] = $url[$n];
             }
             $handles[$i] = curl_init($url['url']);
@@ -439,12 +421,8 @@ class MoodleWebservice {
         do {
             curl_multi_exec($main, $running);
         } while ($running > 0);
-        for ($i = 0; $i < $count; $i++) {
-            if (!empty($options['CURLOPT_RETURNTRANSFER'])) {
-                $results[] = true;
-            } else {
-                $results[] = curl_multi_getcontent($handles[$i]);
-            }
+        for ($i = 0; $i < $count; ++$i) {
+            $results[] = empty($options['CURLOPT_RETURNTRANSFER']) ? curl_multi_getcontent($handles[$i]) : true;
             curl_multi_remove_handle($main, $handles[$i]);
         }
         curl_multi_close($main);
@@ -490,22 +468,6 @@ class MoodleWebservice {
             // exception is not ajax friendly
             //throw new moodle_exception($this->error, 'curl');
         }
-    }
-
-    /**
-     * HTTP HEAD method
-     *
-     * @see request()
-     *
-     * @param string $url
-     * @param array $options
-     * @return bool
-     */
-    private function head($url, $options = array()) {
-        $options['CURLOPT_HTTPGET'] = 0;
-        $options['CURLOPT_HEADER'] = 1;
-        $options['CURLOPT_NOBODY'] = 1;
-        return $this->request($url, $options);
     }
 
     /**
@@ -662,6 +624,46 @@ class MoodleWebservice {
 
     public function get_info() {
         return $this->info;
+    }
+
+
+
+    /**
+     * Private clone method to prevent cloning of the instance of the
+     * *Singleton* instance.
+     *
+     * @return void
+     */
+    private function __clone() {
+
+    }
+
+    /**
+     * Private unserialize method to prevent unserializing of the *Singleton*
+     * instance.
+     *
+     * @return void
+     */
+    private function __wakeup() {
+
+    }
+
+
+
+    /**
+     * HTTP HEAD method
+     *
+     * @see request()
+     *
+     * @param string $url
+     * @param array $options
+     * @return bool
+     */
+    private function head($url, $options = array()) {
+        $options['CURLOPT_HTTPGET'] = 0;
+        $options['CURLOPT_HEADER'] = 1;
+        $options['CURLOPT_NOBODY'] = 1;
+        return $this->request($url, $options);
     }
 
 }

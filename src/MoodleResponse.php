@@ -18,7 +18,7 @@ class MoodleResponse {
         $this->content = $content;
         if(is_string($content)) {
             $tmppar = json_decode($this->content);
-            if (is_object($tmppar) && isset($tmppar->exception)) {
+            if (is_object($tmppar) && (property_exists($tmppar, 'exception') && $tmppar->exception !== null)) {
                 $this->error = $content;
                 $this->content = null;
             }
@@ -55,16 +55,16 @@ class MoodleResponse {
             foreach (get_object_vars($array) as $key => $obj) {
                 if ($key == '__Type') {
                     $do->setField('Title', $obj);
-                } else if (is_array($obj) || is_object($obj)) {
+                } elseif (is_array($obj) || is_object($obj)) {
                     $do->setField($key, $this->parseobject($obj));
                 } else {
                     $do->setField($key, $obj);
                 }
             }
             return $do;
-        } else if (is_array($array)) {
+        } elseif (is_array($array)) {
             $dataList = ArrayList::create();
-            foreach ($array as $key => $obj) {
+            foreach ($array as $obj) {
                 $dataList->push($this->parseobject($obj));
             }
             return $dataList;
