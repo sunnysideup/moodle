@@ -162,6 +162,7 @@ class MoodleWebservice {
         }
         if(isset($_GET['debug']) && Director::isDev()) {
             echo($url. '<br/>');
+            print_r($params);
         }
 
         $options['RETURNTRANSFER'] = 1;

@@ -1,0 +1,11 @@
+---
+Name: sunnysideup-moodle
+---
+
+SilverStripe\Security\Member:
+  extensions:
+    - Sunnysideup\Moodle\Model\Extensions\MemberExtension
+
+SilverStripe\Security\Group:
+  extensions:
+    - Sunnysideup\Moodle\Model\Extensions\GroupExtension
