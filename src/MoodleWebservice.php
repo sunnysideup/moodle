@@ -1,6 +1,6 @@
 <?php
 
-namespace OP;
+namespace Sunnysideup\Moodle;
 
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
@@ -162,6 +162,7 @@ class MoodleWebservice {
         }
         if(isset($_GET['debug']) && Director::isDev()) {
             echo($url. '<br/>');
+            print_r($params);
         }
 
         $options['RETURNTRANSFER'] = 1;
