@@ -1,5 +1,5 @@
 {
-	"name": "otago/moodle",
+	"name": "sunnysideup/moodle",
 	"description": "Moodle webservice",
 	"type": "silverstripe-vendormodule",
 	"keywords": ["silverstripe", "Moodle", "web service"],
