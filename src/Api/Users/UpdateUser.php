@@ -63,7 +63,6 @@ class UpdateUser Extends CreateUser {
 
     public function runAction(DataList $members)
     {
-
         return parent::runAction('core_user_update_users', $params);
     }
 
