@@ -11,7 +11,7 @@
         "psr-4": {
     	"OP\\": "src/"
         }
-    }
+    },
     "prefer-stable": true,
     "minimum-stability": "dev"
   
