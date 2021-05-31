@@ -1,6 +1,6 @@
 <?php
 
-namespace OP;
+namespace Sunnysideup\Moodle;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ArrayList;

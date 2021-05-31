@@ -1,6 +1,6 @@
 <?php
 
-namespace OP;
+namespace Sunnysideup\Moodle;
 
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
