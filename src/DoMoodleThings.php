@@ -11,6 +11,8 @@ use SilverStripe\Core\Extensible;
 use Sunnysideup\Moodle\Users\GetLoginUrlFromEmail;
 use Sunnysideup\Moodle\Users\CreateUser;
 use Sunnysideup\Moodle\Users\UpdateUser;
+use Sunnysideup\Moodle\Users\GetUsers;
+use Sunnysideup\Moodle\Courses\GetCourses;
 
 class DoMoodleThings
 {
@@ -28,6 +30,12 @@ class DoMoodleThings
         }
         $obj = new GetLoginUrlFromEmail();
         return $obj->runAction($email);
+    }
+
+    public function getCourses()
+    {
+        $obj = new GetCourses();
+        print_r($obj->runAction([]));
     }
 
     public function syncCourses()
@@ -79,15 +87,29 @@ class DoMoodleThings
         }
         if($member) {
             if($member->IsRegisteredOnMoodle()) {
-                die('asdf');
                 $obj = new UpdateUser();
-                $id = $obj->runAction($member);
+                $obj->runAction($member);
             } else {
                 $this->createUser($member);
             }
             return (int) $member->MoodleUid;
         }
         return 0;
+    }
+    public function getUsers($member)
+    {
+        if(! $member) {
+            $member = Security::getCurrentUser();
+        }
+        if($member) {
+            if($member->IsRegisteredOnMoodle()) {
+                $obj = new GetUsers();
+                return $obj->runAction($member);
+            } else {
+                return [];
+            }
+        }
+        return [];
     }
 
     public function getGroupFromMoodleCourseId(int $courseId) : ?Group

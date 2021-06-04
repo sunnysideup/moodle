@@ -7,7 +7,7 @@ use Sunnysideup\Moodle\Api\MoodleAction;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ArrayList;
 
-class GetCourse Extends MoodleAction
+class GetCourses Extends MoodleAction
 {
 
     protected $method = 'core_course_get_courses';
@@ -16,18 +16,16 @@ class GetCourse Extends MoodleAction
     {
         $this->validateParam($relevantData);
 
-        $params = array('options' => array(
-            (object) array(
-                'ids'=> [$courseId]
-            )
-        ));
+        $params = [
+            'ids'=> $relevantData
+        ];
         return $this->runActionInner($params);
     }
 
     protected function validateParam($relevantData)
     {
-        if (! $relevantData === intval($relevantData)) {
-            user_error('$relevantData is expected to be an integer ');
+        if(! is_array($relevantData)) {
+            user_error('$relevantData should be an array');
         }
     }
 

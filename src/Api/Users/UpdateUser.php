@@ -13,6 +13,17 @@ class UpdateUser Extends CreateUser
 
     protected $createPassword = false;
 
+    public function runAction($relevantData)
+    {
+        $this->validateParam($relevantData);
+        $data = $this->createData($relevantData);
+        $result = parent::runActionInner(['users' => [$data]], 'POST');
+        if($result && $result->isSuccess()) {
+            return $relevantData->MoodleUid;
+        }
+        return 0;
+    }
+
     protected function createData($relevantData)
     {
         $data = $this->getConverter()->toMoodle($relevantData, $this->createPassword);
