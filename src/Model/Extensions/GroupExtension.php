@@ -36,14 +36,29 @@ class GroupExtension extends DataExtension
         'MoodleUid' => true,
     ];
 
+    /**
+     * @var string
+     */
     private const MOODLE_PARENT_GROUP_CODE = 'MOODLES';
 
+    /**
+     * @var string
+     */
     private const MOODLE_PARENT_GROUP_NAME = 'Moodle Groups';
 
+    /**
+     * @var string
+     */
     private const MOODLE_PARENT_GROUP_EXPLANATION = 'This group holds all the Moodle Courses';
 
+    /**
+     * @var string
+     */
     private const MOODLE_NAME_POST_FIX = '- COURSE';
 
+    /**
+     * @var string
+     */
     private const MOODLE_GROUP_EXPLANATION = 'This group shows the members that are part of a Moodle Course';
 
     public function updateCMSFields(FieldList $fields)
