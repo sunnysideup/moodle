@@ -28,7 +28,7 @@ class MemberExtension extends DataExtension
 
     public function IsRegisteredOnMoodle() : bool
     {
-        return $this->owner->MoodleUid ? true : false;
+        return (bool) $this->owner->MoodleUid;
     }
 
     public function IsRegisteredOnCourse(Group $group) : bool

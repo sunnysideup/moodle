@@ -10,9 +10,9 @@ use SilverStripe\ORM\ArrayList;
  */
 class MoodleResponse {
 
-    private $error = null;
+    private $error;
 
-    private $content = null;
+    private $content;
 
     function __construct($content, $error) {
         $this->error = $error;
@@ -48,7 +48,6 @@ class MoodleResponse {
 
     /**
      * if there was any error in
-     * @return string
      */
     public function getError() : string
     {

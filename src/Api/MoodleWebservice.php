@@ -25,6 +25,9 @@ class MoodleWebservice {
 
     use Configurable;
 
+    /**
+     * @var string
+     */
     protected const WEB_SERVER_LOCATION = 'webservice/rest/server.php';
 
     private $debug = false;
@@ -41,7 +44,7 @@ class MoodleWebservice {
 
     private static $authentication = [];
 
-    protected static $altMoodleRest = null;
+    protected static $altMoodleRest;
 
     public function QuickCall(string $command, $params = [], string $methodType = 'POST')
     {
@@ -666,46 +669,6 @@ class MoodleWebservice {
 
     public function get_info() {
         return $this->info;
-    }
-
-
-
-    /**
-     * Private clone method to prevent cloning of the instance of the
-     * *Singleton* instance.
-     *
-     * @return void
-     */
-    private function __clone() {
-
-    }
-
-    /**
-     * Private unserialize method to prevent unserializing of the *Singleton*
-     * instance.
-     *
-     * @return void
-     */
-    private function __wakeup() {
-
-    }
-
-
-
-    /**
-     * HTTP HEAD method
-     *
-     * @see request()
-     *
-     * @param string $url
-     * @param array $options
-     * @return bool
-     */
-    private function head($url, $options = array()) {
-        $options['CURLOPT_HTTPGET'] = 0;
-        $options['CURLOPT_HEADER'] = 1;
-        $options['CURLOPT_NOBODY'] = 1;
-        return $this->request($url, $options);
     }
 
 }

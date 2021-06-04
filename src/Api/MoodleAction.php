@@ -30,12 +30,7 @@ abstract class MoodleAction {
 
     final protected function runActionInner($params = [], ?string $methodType = 'POST')
     {
-        // connect to moodle
-        if ($this->isQuickMethod) {
-            $call = 'QuickCall';
-        } else {
-            $call = 'call';
-        }
+        $call = $this->isQuickMethod ? 'QuickCall' : 'call';
         $id = $this->logCommand($params, $methodType);
         $result = $this->getApi()->$call(
             $this->method,
@@ -68,11 +63,7 @@ abstract class MoodleAction {
                 break;
             case 'array':
                 if(! is_array($result)) {
-                    if($result) {
-                        $result = [$result];
-                    } else {
-                        $result = [];
-                    }
+                    $result = $result ? [$result] : [];
                 }
                 break;
             case 'string':

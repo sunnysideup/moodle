@@ -129,12 +129,9 @@ class UserToMoodleUserConversionApi
         }
     }
 
-    protected function isRelation($ssField) : bool
+    protected function isRelation($ssField): bool
     {
-        if(strpos($ssField, '.')) {
-            return true;
-        }
-        return false;
+        return (bool) strpos($ssField, '.');
     }
 
     protected function convertRelationToValue($obj, string $ssField, string $type)
@@ -157,7 +154,7 @@ class UserToMoodleUserConversionApi
         }
         $obj = DataObject::get_one($obj->ClassName, [$field => $value]);
         if($obj) {
-            return intval($obj->ID);
+            return (int) $obj->ID;
         }
         return 0;
     }

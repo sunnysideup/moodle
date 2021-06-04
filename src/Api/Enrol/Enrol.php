@@ -16,6 +16,9 @@ class Enrol Extends MoodleAction
 
     protected $method = 'enrol_manual_enrol_users';
 
+    /**
+     * @var int
+     */
     protected const STUDENT_ROLE_ID = 5;
 
     protected $resultGetArray = false;
