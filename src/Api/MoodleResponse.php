@@ -3,6 +3,7 @@
 namespace Sunnysideup\Moodle\Api;
 
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\ArrayList;
 
 /**
@@ -29,26 +30,16 @@ class MoodleResponse {
         }
     }
 
-    /**
-     * if there was any error in
-     * @return string
-     */
     public function hasError() : bool
     {
         return !empty($this->content) && empty($this->error) ? false : true;
     }
-    /**
-     * if there was any error in
-     * @return string
-     */
+
     public function isSuccess() : bool
     {
         return ! $this->hasError();
     }
 
-    /**
-     * if there was any error in
-     */
     public function getError() : string
     {
         return $this->error;
@@ -56,7 +47,7 @@ class MoodleResponse {
 
     /**
      * JSON array of the result of the response
-     * @return json array
+     * @return string (json array)
      */
     public function getContent() : string
     {
@@ -65,7 +56,7 @@ class MoodleResponse {
 
     /**
      * Returns SilverStripe object representations of content
-     * @return \DataObject|\DataList|null
+     * @return DataObject|DataList|null
      */
     public function getSilverstripeObject()
      {
@@ -87,7 +78,7 @@ class MoodleResponse {
     /**
      * Recursivity creates the SilverStripe dataobject represntation of content
      * @param mixed $array
-     * @return \DataObject|\DataList|null
+     * @return DataObject|DataList|null
      */
     private function parseobject($array)
     {

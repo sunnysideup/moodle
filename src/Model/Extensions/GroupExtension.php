@@ -1,7 +1,7 @@
 <?php
 namespace Sunnysideup\Moodle\Model\Extensions;
 
-use SilverStripe\Forms\HTMLEditor\HtmlEditorField;
+use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Control\Controller;
@@ -61,7 +61,7 @@ class GroupExtension extends DataExtension
                     'DisplayName',
                     'Display Name'
                 ),
-                HtmlEditorField::create(
+                HTMLEditorField::create(
                     'Summary',
                     'Summary'
                 )->performReadonlyTransformation(),
@@ -112,6 +112,7 @@ class GroupExtension extends DataExtension
             $group->write();
             return $group;
         }
+        return null;
     }
 
     public function canDelete($member = null)
