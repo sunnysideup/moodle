@@ -14,12 +14,19 @@ abstract class MoodleAction {
 
     protected $method = 'please-set-in-child-class';
 
+    protected $isQuickMethod = true;
+
+    protected $resultGetArray = true;
+
+    protected $resultTakeFirstEntry = false;
+
+    protected $resultRelevantArrayKey = '';
+
+    protected $resultVariableType = 'string';
+
     abstract public function runAction($relevantData);
 
     abstract protected function validateParam($relevantData);
-
-    protected $isQuickMethod = true;
-
 
     final protected function runActionInner($params = [], ?string $methodType = 'POST')
     {
@@ -36,6 +43,43 @@ abstract class MoodleAction {
             $methodType
         );
         $this->logOutcome($id, $result);
+        return $result;
+    }
+
+    protected function processResults($result)
+    {
+        if($result->isSuccess()) {
+            if($this->resultGetArray) {
+                $result = $result->getContentAsArray();
+                if($this->resultTakeFirstEntry) {
+                    $result = $result[0] ?? [];
+                }
+                if($this->resultRelevantArrayKey) {
+                    $result = $result[$this->resultRelevantArrayKey] ?? '';
+                }
+            }
+        } else {
+            $result = '';
+        }
+        switch (strtolower($this->resultVariableType)) {
+            case 'int':
+            case 'integer':
+                $result = (int) $result;
+                break;
+            case 'array':
+                if(! is_array($result)) {
+                    if($result) {
+                        $result = [$result];
+                    } else {
+                        $result = [];
+                    }
+                }
+                break;
+            case 'string':
+            default:
+                $result = (string) $result;
+                break;
+        }
         return $result;
     }
 

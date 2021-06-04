@@ -22,6 +22,10 @@ class MemberExtension extends DataExtension
         'MoodleUid' => 'Int',
     ];
 
+    private static $indexes =[
+        'MoodleUid' => true,
+    ];
+
     public function IsRegisteredOnMoodle() : bool
     {
         return $this->owner->MoodleUid ? true : false;

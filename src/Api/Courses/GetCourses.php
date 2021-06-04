@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\Moodle\Courses;
+namespace Sunnysideup\Moodle\Api\Courses;
 
 use Sunnysideup\Moodle\Api\MoodleAction;
 
@@ -12,6 +12,14 @@ class GetCourses Extends MoodleAction
 
     protected $method = 'core_course_get_courses';
 
+    protected $resultGetArray = true;
+
+    protected $resultTakeFirstEntry = false;
+
+    protected $resultRelevantArrayKey = '';
+
+    protected $resultVariableType = 'array';
+
     public function runAction($relevantData)
     {
         $this->validateParam($relevantData);
@@ -19,7 +27,9 @@ class GetCourses Extends MoodleAction
         $params = [
             'ids'=> $relevantData
         ];
-        return $this->runActionInner($params);
+        $result = $this->runActionInner($params);
+
+        return $this->processResults($result);
     }
 
     protected function validateParam($relevantData)

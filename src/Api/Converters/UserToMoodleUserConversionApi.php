@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\Moodle\Users;
+namespace Sunnysideup\Moodle\Api\Converters;
 
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
@@ -105,7 +105,12 @@ class UserToMoodleUserConversionApi
         } else {
             $val = $obj->$ssField;
         }
-        switch ($type) {
+        switch (strtolower($type)) {
+            case 'int':
+            case 'integer':
+                $val = (int) $val;
+                break;
+            case 'bool':
             case 'boolean':
                 $val = $val ? 1 : 0;
                 break;

@@ -8,11 +8,13 @@ use SilverStripe\Security\Security;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
-use Sunnysideup\Moodle\Users\GetLoginUrlFromEmail;
-use Sunnysideup\Moodle\Users\CreateUser;
-use Sunnysideup\Moodle\Users\UpdateUser;
-use Sunnysideup\Moodle\Users\GetUsers;
-use Sunnysideup\Moodle\Courses\GetCourses;
+use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromEmail;
+use Sunnysideup\Moodle\Api\Users\CreateUser;
+use Sunnysideup\Moodle\Api\Users\UpdateUser;
+use Sunnysideup\Moodle\Api\Users\GetUsers;
+use Sunnysideup\Moodle\Api\Courses\GetCourses;
+
+use Sunnysideup\Moodle\Model\Extensions\GroupExtension;
 
 class DoMoodleThings
 {
@@ -35,26 +37,25 @@ class DoMoodleThings
     public function getCourses()
     {
         $obj = new GetCourses();
-        print_r($obj->runAction([]));
+        return $obj->runAction([]);
     }
 
     public function syncCourses()
     {
-        $existingGpsArray = Group::get()->exclude('MoodleUid', 0)->columnUnique();
-        $courses = $api->getCourses();
+        $existingGpsArray = array_flip(Group::get()->exclude('MoodleUid', 0)->columnUnique());
+        $courses = $this->getCourses();
         foreach($courses as $course) {
-            $filter = ['MoodleUid' => $course->ID];
-            $gp = Group::get()->filter($filter) ;
-            if(! $gp) {
-                $gp = Group::create($filter);
+            $group = GroupExtension::create_group_from_moodle_data($course);
+            if ($group) {
+                unset($existingGpsArray[$group->ID]);
             }
-            $gp->write();
-            unset($existingGpsArray[$gp->ID]);
         }
-        $obseleteGroups = Group::get()->filter(['ID' => $existingGpsArray]);
-        foreach($obseleteGroups as $group) {
-            if($group->MoodleUid) {
-                $group->delete();
+        if(count($existingGpsArray)) {
+            $obseleteGroups = Group::get()->filter(['ID' => $existingGpsArray]);
+            foreach($obseleteGroups as $group) {
+                if($group->MoodleUid) {
+                    $group->delete();
+                }
             }
         }
     }

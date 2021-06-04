@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\Moodle\Users;
+namespace Sunnysideup\Moodle\Api\Users;
 
 use Sunnysideup\Moodle\Api\MoodleAction;
 
@@ -8,10 +8,18 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ArrayList;
 
 use SilverStripe\Security\Member;
-
+use Sunnysideup\Moodle\Api\Converters\UserToMoodleUserConversionApi;
 class GetUsers Extends MoodleAction
 {
     protected $method = 'core_user_get_users_by_field';
+
+    protected $resultGetArray = true;
+
+    protected $resultTakeFirstEntry = true;
+
+    protected $resultRelevantArrayKey = '';
+
+    protected $resultVariableType = 'array';
 
     public function runAction($relevantData)
     {
@@ -21,7 +29,7 @@ class GetUsers Extends MoodleAction
 
         $result = $this->runActionInner($params);
 
-        return $result;
+        return $this->processResults($result);
     }
 
     protected function validateParam($relevantData)

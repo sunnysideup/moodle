@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\Moodle\Users;
+namespace Sunnysideup\Moodle\Api\Users;
 
 use Sunnysideup\Moodle\Api\MoodleAction;
 
@@ -8,7 +8,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\Member;
-
+use Sunnysideup\Moodle\Api\Converters\UserToMoodleUserConversionApi;
 /**
  * class used to respond with JSON requests
  *
@@ -16,22 +16,27 @@ use SilverStripe\Security\Member;
  */
 class CreateUser Extends MoodleAction
 {
-    protected $method = 'core_user_create_users';
-
     private static $converter = UserToMoodleUserConversionApi::class;
 
+    protected $method = 'core_user_create_users';
+
     protected $createPassword = false;
+
+    protected $resultGetArray = true;
+
+    protected $resultTakeFirstEntry = true;
+
+    protected $resultRelevantArrayKey = 'id';
+
+    protected $resultVariableType = 'int';
 
     public function runAction($relevantData)
     {
         $this->validateParam($relevantData);
         $data = $this->createData($relevantData);
         $result = parent::runActionInner(['users' => [$data]], 'POST');
-        if($result && $result->isSuccess()) {
-            $array = $result->getContentAsArray();
-            return $array[0]['id'] ?? 0;
-        }
-        return 0;
+
+        return $this->processResults($result);
     }
 
     protected function validateParam($relevantData)

@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\Moodle\Users;
+namespace Sunnysideup\Moodle\Api\Users;
 
 use Sunnysideup\Moodle\Api\MoodleAction;
 
@@ -10,6 +10,14 @@ use SilverStripe\ORM\ArrayList;
 class GetLoginUrlFromEmail Extends MoodleAction
 {
     protected $method = 'auth_userkey_request_login_url';
+
+    protected $resultGetArray = true;
+
+    protected $resultTakeFirstEntry = false;
+
+    protected $resultRelevantArrayKey = 'loginurl';
+
+    protected $resultVariableType = 'string';
 
     public function runAction($relevantData)
     {
@@ -23,11 +31,8 @@ class GetLoginUrlFromEmail Extends MoodleAction
             ]
         ];
         $result = parent::runActionInner($params);
-        if($result && $result->isSuccess()) {
-            $array = $result->getContentAsArray();
-            return $array['loginurl'] ?? '';
-        }
-        return 'error';
+
+        return $this->processResults($result);
 
     }
 
