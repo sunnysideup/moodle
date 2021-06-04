@@ -10,8 +10,13 @@ class MoodleLog extends DataObject
 
     private static $db = [
         'Action' => 'Varchar',
-        'Variables' => 'Text',
+        'Params' => 'Text',
+        'IsSuccess' => 'Boolean',
+        'Result' => 'Text',
+        'Error' => 'Text',
     ];
+
+    private static $default_sort = 'Created DESC';
 
     private static $has_one = [
         'Member' => Member::class,
@@ -20,5 +25,7 @@ class MoodleLog extends DataObject
     private static $many_many = [
         'Members' => Member::class,
     ];
+
+    private static $table_name = 'MoodleLog';
 
 }

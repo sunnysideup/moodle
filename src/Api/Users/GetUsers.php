@@ -2,7 +2,7 @@
 
 namespace Sunnysideup\Moodle\Users;
 
-use Sunnysideup\Moodle\MoodleAction;
+use Sunnysideup\Moodle\Api\MoodleAction;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ArrayList;
@@ -59,16 +59,23 @@ use SilverStripe\ORM\ArrayList;
  * }
  *
  */
-class GetUsers Extends MoodleAction {
+class GetUsers Extends MoodleAction
+{
+    protected $method = 'core_user_get_users_by_field';
 
-    public function runAction(string $email)
+    public function runAction($relevantData)
     {
+        $this->validateParam($relevantData);
 
-        $params = array('userlist' => array(
-            (object) array($email)
-        ));
-        return parent::runAction('core_user_get_users_by_field', $params);
+        $params = [];
+
+        return $this->runActionInner($params);
     }
 
+    protected function validateParam($relevantData)
+    {
+
+
+    }
 
 }

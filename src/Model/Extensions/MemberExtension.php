@@ -19,12 +19,12 @@ class MemberExtension extends DataExtension
 {
 
     private static $db =[
-        'MoodleID' => 'Int',
+        'MoodleUid' => 'Int',
     ];
 
     public function IsRegisteredOnMoodle() : bool
     {
-        return $this->owner->MoodleID ? true : false;
+        return $this->owner->MoodleUid ? true : false;
     }
 
     public function IsRegisteredOnCourse(Group $group) : bool

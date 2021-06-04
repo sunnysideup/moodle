@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\Moodle;
+namespace Sunnysideup\Moodle\Api;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ArrayList;
@@ -10,8 +10,9 @@ use SilverStripe\ORM\ArrayList;
  */
 class MoodleResponse {
 
-    private $error;
-    private $content;
+    private $error = null;
+
+    private $content = null;
 
     function __construct($content, $error) {
         $this->error = $error;
@@ -22,23 +23,66 @@ class MoodleResponse {
                 $this->error = $content;
                 $this->content = null;
             }
+        } else {
+            $this->error = serialize($content);
+            $this->error .= serialize($error);
         }
-    }
-
-    /**
-     * JSON array of the result of the response
-     * @return json array
-     */
-    public function Content() {
-        return $this->content;
     }
 
     /**
      * if there was any error in
      * @return string
      */
-    public function Error() {
+    public function hasError() : bool
+    {
+        return !empty($this->content) && empty($this->error) ? false : true;
+    }
+    /**
+     * if there was any error in
+     * @return string
+     */
+    public function isSuccess() : bool
+    {
+        return ! $this->hasError();
+    }
+
+    /**
+     * if there was any error in
+     * @return string
+     */
+    public function getError() : string
+    {
         return $this->error;
+    }
+
+    /**
+     * JSON array of the result of the response
+     * @return json array
+     */
+    public function getContent() : string
+    {
+        return $this->content;
+    }
+
+    /**
+     * Returns SilverStripe object representations of content
+     * @return \DataObject|\DataList|null
+     */
+    public function getSilverstripeObject()
+     {
+        if(! is_string($this->content)) {
+            return null;
+        }
+        return $this->parseobject(json_decode($this->content));
+    }
+
+    public function getContentAsArray() : array
+    {
+        if(! $this->hasError()) {
+            return json_decode($this->content, true);
+        } else {
+            return [];
+        }
     }
 
     /**
@@ -46,7 +90,8 @@ class MoodleResponse {
      * @param mixed $array
      * @return \DataObject|\DataList|null
      */
-    private function parseobject($array) {
+    private function parseobject($array)
+    {
         if (is_object($array)) {
             if (get_class($array) == 'DataObject') {
                 return $array;
@@ -70,15 +115,6 @@ class MoodleResponse {
             return $dataList;
         }
         return null;
-    }
-
-    /**
-     * Returns SilverStripe object representations of content
-     * @return \DataObject|\DataList|null
-     */
-    public function Data() {
-        if(!is_string($this->content)) return null;
-        return $this->parseobject(json_decode($this->content));
     }
 
 }

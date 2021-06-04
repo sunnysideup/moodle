@@ -12,6 +12,8 @@ use SilverStripe\Forms\TabSet;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\Filters\ExactMatchFilter;
 use SilverStripe\ORM\Filters\PartialMatchFilter;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 
 
@@ -19,7 +21,7 @@ class GroupExtension extends DataExtension
 {
 
     private static $db =[
-        'MoodleID' => 'Int',
+        'MoodleUid' => 'Int',
     ];
 
     private const MOODLE_PARENT_GROUP_CODE = 'MOODLES';
@@ -33,7 +35,7 @@ class GroupExtension extends DataExtension
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        if ($this->owner->MoodleID) {
+        if ($this->owner->MoodleUid) {
             $holderGroup = $this->findOrCreateHolderGroup();
             $this->owner->Locked = true;
             $this->owner->ParentID = $holderGroup->ID;
@@ -46,28 +48,26 @@ class GroupExtension extends DataExtension
 
     public function canDelete($member = null)
     {
-        if($this->findOrCreateHolderGroup()->ID === $this->owner->ID) {
-            return false;
-        } elseif($this->owner->MoodleID) {
+        if($this->findOrMoodleCreateHolderGroup()->ID === $this->owner->ID || $this->owner->MoodleUid) {
             return false;
         }
     }
 
     public function canEdit($member = null)
     {
-        if($this->findOrCreateHolderGroup()->ID === $this->owner->ID) {
+        if($this->owner->findOrMoodleCreateHolderGroup()->ID === $this->owner->ID) {
             return false;
-        } elseif($this->owner->MoodleID) {
+        } elseif($this->owner->MoodleUid) {
             return false;
         }
     }
 
-    public function findOrCreateHolderGroup() : Group
+    public function findOrMoodleCreateHolderGroup() : Group
     {
         $filter = ['Code' => self::MOODLE_PARENT_GROUP_CODE];
         $group = DataObject::get_one(Group::class, $filter);
         if(! $group) {
-            Group::create($filter);
+            $group =  Group::create($filter);
         }
         $group->Sort = 99999;
         $group->Locked = true;

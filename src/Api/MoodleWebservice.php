@@ -1,11 +1,14 @@
 <?php
 
-namespace Sunnysideup\Moodle;
+namespace Sunnysideup\Moodle\Api;
 
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
+use SilverStripe\Control\Controller;
 use SilverStripe\Core\Environment;
-
+use MoodleRest;
+use SilverStripe\Security\Security;
+use SilverStripe\Security\Permission;
 /**
  * Silverstripe Moodle webservice client. Utilises REST/JSON. JSON is only
  * supported under Moodle 2.2 and above.
@@ -22,11 +25,44 @@ class MoodleWebservice {
 
     use Configurable;
 
+    protected const WEB_SERVER_LOCATION = 'webservice/rest/server.php';
+
+    private $debug = false;
+
     private static $instance;   // singleton instance
+
     private static $token; // JSON authentication token
+
     private static $errors = array(); // connection errors
+
     private static $restformat = 'json';
+
     private $count = 0;
+
+    private static $authentication = [];
+
+    protected static $altMoodleRest = null;
+
+    public function QuickCall(string $command, $params = [], string $methodType = 'POST')
+    {
+        $result = $this->getQuickCommandApi()->request($command, $params, $methodType);
+        return new MoodleResponse($result, $this->error);
+    }
+
+    protected function getQuickCommandApi() : MoodleRest
+    {
+        if(! self::$altMoodleRest) {
+            $authentication = self::config()->get('authentication');
+            self::$altMoodleRest = new MoodleRest(
+                self::getLocation() . self::WEB_SERVER_LOCATION,
+                $authentication['statictoken'] ?? '',
+                $this->config()->get('restformat')
+            );
+        }
+        self::$altMoodleRest->setDebug($this->debug);
+        self::$altMoodleRest->setPrintOnRequest($this->debug);
+        return self::$altMoodleRest;
+    }
 
     /**
      * asks Moodle for token. If it fails it will return a null object. You can see
@@ -152,17 +188,18 @@ class MoodleWebservice {
      * @param array $options additional options
      * @return MoodleResponse
      */
-    public function call($function, $params, $method = 'POST', $options = array()) {
+    public function call($function, $params, $method = 'POST', ?array $options = []) {
         $this->error = "";
-        $url = MoodleWebservice::getLocation() . 'webservice/rest/server.php'.
+        $url = MoodleWebservice::getLocation() . self::WEB_SERVER_LOCATION.
                 '?wstoken=' . MoodleWebservice::$token . '&wsfunction='.$function;
 
-        if(MoodleWebservice::$restformat != 'xml') {
+        if(MoodleWebservice::$restformat !== 'xml') {
             $url .= '&moodlewsrestformat='.MoodleWebservice::$restformat;
         }
         if(isset($_GET['debug']) && Director::isDev()) {
-            echo($url. '<br/>');
+            echo($url. '<hr/>');
             print_r($params);
+            echo($url. '<hr/>');
         }
 
         $options['RETURNTRANSFER'] = 1;
@@ -187,7 +224,11 @@ class MoodleWebservice {
      * *Singleton* via the 'connect' operator from outside of this class.
      */
     protected function __construct() {
-
+        if( Controller::curr()->getRequest()->getVar('debug')) {
+            if (Director::isDev() || Permission::check('ADMIN')) {
+                $this->debug = true;
+            }
+        }
     }
 
     public $proxy = false;
