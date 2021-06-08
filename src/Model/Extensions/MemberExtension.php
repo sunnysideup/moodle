@@ -33,7 +33,7 @@ class MemberExtension extends DataExtension
 
     public function IsRegisteredOnCourse(Group $group) : bool
     {
-        return $this->owner->Groups()->filter(['MemberID' => $this->owner->ID])->count() > 0;
+        return $this->owner->Groups()->filter(['ID' => $group->ID])->count() > 0;
     }
 
 }

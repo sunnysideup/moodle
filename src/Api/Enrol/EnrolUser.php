@@ -11,7 +11,7 @@ use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 
 
-class Enrol Extends MoodleAction
+class EnrolUser Extends MoodleAction
 {
 
     protected $method = 'enrol_manual_enrol_users';
@@ -32,15 +32,17 @@ class Enrol Extends MoodleAction
     public function runAction($relevantData)
     {
         $this->validateParam($relevantData);
+        extract($relevantData);
         $params = [
-            [
-                'roleid' => self::STUDENT_ROLE_ID,
-                'userid' => $relevantData['Member']->MoodleUid,
-                'courseid' => $relevantData['Group']->MoodleUid,
+            'enrolments' => [
+                [
+                    'roleid' => self::STUDENT_ROLE_ID,
+                    'userid' => $Member->MoodleUid,
+                    'courseid' => $Group->MoodleUid,
+                ]
             ]
         ];
         $result = $this->runActionInner($params);
-
         return $this->processResults($result);
     }
 
@@ -48,6 +50,9 @@ class Enrol Extends MoodleAction
     {
         if(! is_array($relevantData)) {
             user_error('$relevantData is expected to be an array with two keys (CourseId and UserId).');
+        }
+        if(! count($relevantData) == 2) {
+            user_error('$relevantData is expected to see exactly two parameters. Group and Member.');
         }
         if (!
             isset($relevantData['Group']) &&

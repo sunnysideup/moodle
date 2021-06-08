@@ -8,11 +8,13 @@ use SilverStripe\Security\Security;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
+use SilverStripe\ORM\DataObject;
 use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromEmail;
 use Sunnysideup\Moodle\Api\Users\CreateUser;
 use Sunnysideup\Moodle\Api\Users\UpdateUser;
 use Sunnysideup\Moodle\Api\Users\GetUsers;
 use Sunnysideup\Moodle\Api\Courses\GetCourses;
+use Sunnysideup\Moodle\Api\Enrol\EnrolUser;
 
 use Sunnysideup\Moodle\Model\Extensions\GroupExtension;
 
@@ -97,6 +99,7 @@ class DoMoodleThings
         }
         return 0;
     }
+
     public function getUsers($member)
     {
         if(! $member) {
@@ -118,14 +121,14 @@ class DoMoodleThings
         return DataObject::get_one(Group::class, ['MoodleUid' => $courseId]);
     }
 
-    public function enrolUserOnCourse($member, int $courseId)
+    public function enrolUserOnCourse($member, $group)
     {
-        $group = $this->getGroupFromMoodleCourseId($courseId);
         if($group && ! $member->IsRegisteredOnCourse($group)) {
-            //todo: add to course on Moodle...
-            $this->updateUser($member);
+            $obj = new EnrolUser();
+            $obj->runAction(['Member' => $member, 'Group' => $group]);
             $group->Members()->add($member);
         }
+        $this->updateUser($member);
 
     }
 

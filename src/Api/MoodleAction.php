@@ -43,7 +43,9 @@ abstract class MoodleAction {
 
     protected function processResults($result)
     {
+        $success = false;
         if($result->isSuccess()) {
+            $success = true;
             if($this->resultGetArray) {
                 $result = $result->getContentAsArray();
                 if($this->resultTakeFirstEntry) {
@@ -56,6 +58,9 @@ abstract class MoodleAction {
         } else {
             $result = '';
         }
+        if($result instanceof MoodleResponse) {
+            $result = $result->getContent();
+        }
         switch (strtolower($this->resultVariableType)) {
             case 'int':
             case 'integer':
@@ -65,6 +70,9 @@ abstract class MoodleAction {
                 if(! is_array($result)) {
                     $result = $result ? [$result] : [];
                 }
+                break;
+            case 'boolean':
+                $result = $success;
                 break;
             case 'string':
             default:
