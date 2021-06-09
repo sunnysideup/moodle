@@ -39,7 +39,9 @@ abstract class MoodleAction {
             $params,
             $methodType
         );
-        $this->logOutcome($id, $result);
+        if($result instanceof MoodleResponse) {
+            $this->logOutcome($id, $result);
+        }
         return $result;
     }
 
@@ -104,6 +106,7 @@ abstract class MoodleAction {
                 ]
             )->write();
         }
+        return 0;
     }
 
     protected function logOutcome(int $id, MoodleResponse $result)

@@ -129,14 +129,22 @@ class DoMoodleThings
 
     public function enrolUserOnCourse(Group $group, ?Member $member = null)
     {
-        $outcome = true;
-        if($group && ! $member->IsRegisteredOnCourse($group)) {
-            $obj = new EnrolUser();
-            $outcome = $obj->runAction(['Member' => $member, 'Group' => $group]);
-            $group->Members()->add($member);
-            return $outcome;
+        $outcome = false;
+        if(! $member) {
+            $member = Security::getCurrentUser();
         }
-        $this->updateUser($member);
+        if($member) {
+            $outcome = false;
+            if($group && $group->MoodleUid)
+                $outcome = true;
+                if(! $member->IsRegisteredOnCourse($group)) {
+                $obj = new EnrolUser();
+                $outcome = $obj->runAction(['Member' => $member, 'Group' => $group]);
+                $group->Members()->add($member);
+                return $outcome;
+            }
+            $this->updateUser($member);
+        }
         return $outcome;
     }
 
