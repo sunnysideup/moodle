@@ -24,6 +24,12 @@ class DoMoodleThings
     use Configurable;
     use Extensible;
 
+    /**
+     * returns SSO link for Moodle for current user or any other email address
+     *
+     * @param  string $email optional
+     * @return string        link
+     */
     public function getUserSsoLink(?string $email = '') : string
     {
         if(! $email) {
@@ -121,15 +127,17 @@ class DoMoodleThings
         return DataObject::get_one(Group::class, ['MoodleUid' => $courseId]);
     }
 
-    public function enrolUserOnCourse($member, $group)
+    public function enrolUserOnCourse(Group $group, ?Member $member = null)
     {
+        $outcome = true;
         if($group && ! $member->IsRegisteredOnCourse($group)) {
             $obj = new EnrolUser();
-            $obj->runAction(['Member' => $member, 'Group' => $group]);
+            $outcome = $obj->runAction(['Member' => $member, 'Group' => $group]);
             $group->Members()->add($member);
+            return $outcome;
         }
         $this->updateUser($member);
-
+        return $outcome;
     }
 
 }
