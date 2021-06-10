@@ -156,8 +156,6 @@ class GroupExtension extends DataExtension
     {
         if($this->owner->findOrCreateMoodleHolderGroup()->ID === $this->owner->ID) {
             return false;
-        } elseif($this->owner->MoodleUid) {
-            return false;
         }
     }
 

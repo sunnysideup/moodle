@@ -126,16 +126,7 @@ class DoMoodleThings
     {
         return DataObject::get_one(Group::class, ['MoodleUid' => $courseId]);
     }
-    public function enrolUserOnCourse($member, int $courseId)
-    {
-        $group = $this->getGroupFromMoodleCourseId($courseId);
-        if($group && ! $member->IsRegisteredOnCourse($group)) {
-            //todo: add to course on Moodle...
-            $this->updateUser($member);
-            $group->Members()->add($member);
-        }
 
-    }
     public function enrolUserOnCourse(Group $group, ?Member $member = null)
     {
         $outcome = false;
@@ -144,13 +135,13 @@ class DoMoodleThings
         }
         if($member) {
             $outcome = false;
-            if($group && $group->MoodleUid)
+            if($group && $group->MoodleUid) {
                 $outcome = true;
                 if(! $member->IsRegisteredOnCourse($group)) {
-                $obj = new EnrolUser();
-                $outcome = $obj->runAction(['Member' => $member, 'Group' => $group]);
-                $group->Members()->add($member);
-                return $outcome;
+                    $obj = new EnrolUser();
+                    $outcome = $obj->runAction(['Member' => $member, 'Group' => $group]);
+                    $group->Members()->add($member);
+                }
             }
             $this->updateUser($member);
         }
