@@ -28,7 +28,7 @@ abstract class MoodleAction {
 
     abstract protected function validateParam($relevantData);
 
-    private static $log = false;
+    private static $log = true;
 
     final protected function runActionInner($params = [], ?string $methodType = 'POST')
     {
