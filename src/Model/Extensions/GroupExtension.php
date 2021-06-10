@@ -1,6 +1,7 @@
 <?php
 namespace Sunnysideup\Moodle\Model\Extensions;
 
+use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\TextareaField;
@@ -26,6 +27,7 @@ class GroupExtension extends DataExtension
 
     private static $db =[
         'MoodleUid' => 'Int',
+        'CanEnrolWithMoodle' => 'Boolean',
         'DisplayName' => 'Varchar(100)',
         'Summary' => 'HTMLText',
         'StartDateTs' => 'Int',
@@ -68,6 +70,10 @@ class GroupExtension extends DataExtension
         $fields->addFieldsToTab(
             'Root.Moodle',
             [
+                CheckboxField::create(
+                    'CanEnrolWithMoodle',
+                    'User can enrol?'
+                ),
                 ReadonlyField::create(
                     'MoodleUid',
                     'Moodle Course ID'

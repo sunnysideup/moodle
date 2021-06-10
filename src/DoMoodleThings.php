@@ -8,13 +8,11 @@ use SilverStripe\Security\Security;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
-use SilverStripe\ORM\DataObject;
 use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromEmail;
 use Sunnysideup\Moodle\Api\Users\CreateUser;
 use Sunnysideup\Moodle\Api\Users\UpdateUser;
 use Sunnysideup\Moodle\Api\Users\GetUsers;
 use Sunnysideup\Moodle\Api\Courses\GetCourses;
-use Sunnysideup\Moodle\Api\Enrol\EnrolUser;
 
 use Sunnysideup\Moodle\Model\Extensions\GroupExtension;
 
@@ -44,7 +42,7 @@ class DoMoodleThings
 
     public function syncCourses()
     {
-        $existingGpsArray = array_flip(Group::get()->exclude('MoodleUid', 0)->columnUnique());
+        $existingGpsArray = array_flip(Group::get()->filter(['CanEnrolWithMoodle' => true])->columnUnique());
         $courses = $this->getCourses();
         foreach($courses as $course) {
             $group = GroupExtension::create_group_from_moodle_data($course);
@@ -99,7 +97,6 @@ class DoMoodleThings
         }
         return 0;
     }
-
     public function getUsers($member)
     {
         if(! $member) {
@@ -121,14 +118,14 @@ class DoMoodleThings
         return DataObject::get_one(Group::class, ['MoodleUid' => $courseId]);
     }
 
-    public function enrolUserOnCourse($member, $group)
+    public function enrolUserOnCourse($member, int $courseId)
     {
+        $group = $this->getGroupFromMoodleCourseId($courseId);
         if($group && ! $member->IsRegisteredOnCourse($group)) {
-            $obj = new EnrolUser();
-            $obj->runAction(['Member' => $member, 'Group' => $group]);
+            //todo: add to course on Moodle...
+            $this->updateUser($member);
             $group->Members()->add($member);
         }
-        $this->updateUser($member);
 
     }
 
