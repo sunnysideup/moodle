@@ -20,6 +20,7 @@ use SilverStripe\ORM\Filters\PartialMatchFilter;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
+use SilverStripe\Security\Security;
 
 
 class GroupExtension extends DataExtension
@@ -99,6 +100,14 @@ class GroupExtension extends DataExtension
             ]
         );
         return $fields;
+    }
+
+    public function IsRegisteredOnCourse(?Member $member = null) : bool
+    {
+        if(! $member) {
+            $member = Security::getCurrentUser();
+        }
+        return $this->owner->Members()->filter(['ID' => $member->ID ?? 0])->count() > 0;
     }
 
     public function onBeforeWrite()

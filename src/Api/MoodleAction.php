@@ -28,6 +28,8 @@ abstract class MoodleAction {
 
     abstract protected function validateParam($relevantData);
 
+    private static $log = false;
+
     final protected function runActionInner($params = [], ?string $methodType = 'POST')
     {
         $call = $this->isQuickMethod ? 'QuickCall' : 'call';
@@ -37,7 +39,9 @@ abstract class MoodleAction {
             $params,
             $methodType
         );
-        $this->logOutcome($id, $result);
+        if($result instanceof MoodleResponse) {
+            $this->logOutcome($id, $result);
+        }
         return $result;
     }
 
@@ -93,26 +97,32 @@ abstract class MoodleAction {
 
     protected function logCommand($params, string $methodType) : int
     {
-        return MoodleLog::create(
-            [
-                'Action' => $this->method,
-                'Params' => serialize($params),
-                'MethodType' => $methodType,
-            ]
-        )->write();
+        if($this->Config()->get('log')) {
+            return MoodleLog::create(
+                [
+                    'Action' => $this->method,
+                    'Params' => serialize($params),
+                    'MethodType' => $methodType,
+                ]
+            )->write();
+        }
+        return 0;
     }
 
     protected function logOutcome(int $id, MoodleResponse $result)
     {
-        $obj = MoodleLog::get()->byID($id);
-        if(! $obj) {
-            $obj = new MoodleLog();
-        }
-        $obj->IsSuccess = $result->isSuccess();
-        if($obj->IsSuccess) {
-            $obj->Result = serialize($result->getContent());
-        } else {
-            $obj->Error = $result->getError();
+        if($this->Config()->get('log')) {
+            $obj = MoodleLog::get()->byID($id);
+            if(! $obj) {
+                $obj = new MoodleLog();
+            }
+            $obj->IsSuccess = $result->isSuccess();
+            if($obj->IsSuccess) {
+                $obj->Result = serialize($result->getContent());
+            } else {
+                $obj->Error = serialize($result->getError());
+            }
+            $obj->write();
         }
     }
 }
