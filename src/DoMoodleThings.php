@@ -37,7 +37,7 @@ class DoMoodleThings
         if($member) {
             $email = $member->Email;
             $obj = Injector::inst()->get(GetLoginUrlFromEmail::class);
-            return $obj->runAction($email);
+            return $obj->runAction($member);
         }
         return '';
     }
