@@ -44,7 +44,7 @@ class CreateUser Extends MoodleAction
     protected function validateParams($relevantData) : bool
     {
         if (! $relevantData instanceof Member) {
-            $this->paramValidationErrors[] = 'We need an '.Member::class.' to create this login. You provided: '.print_r($relevantData, 1);
+            $this->recordValidateParamsError('We need an '.Member::class.' to create this login. You provided: '.print_r($relevantData, 1));
             return false;
         } else {
             return true;

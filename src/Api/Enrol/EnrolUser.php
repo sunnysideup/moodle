@@ -52,22 +52,23 @@ class EnrolUser Extends MoodleAction
     {
         $result = true;
         if(! is_array($relevantData)) {
-            $this->paramValidationErrors[] = '$relevantData is expected to be an array with two keys (CourseId and UserId).';
-            $result = false;
+            $this->recordValidateParamsError('$relevantData is expected to be an array with two keys (CourseId and UserId).');
+            return false;
         }
-        if(! count($relevantData) == 2) {
-            $this->paramValidationErrors[] = '$relevantData is expected to see exactly two parameters. Group and Member.';
-            $result = false;
+        elseif(! count($relevantData) == 2) {
+            $this->recordValidateParamsError('$relevantData is expected to see exactly two parameters. Group and Member.');
+            return false;
         }
-        if (! isset($relevantData['Group']) && $relevantData['Group'] instanceof Group) {
-            $this->paramValidationErrors[] = '$relevantData is expected to contain an integer for CourseId .';
-            $result = false;
+        elseif (! isset($relevantData['Group']) && $relevantData['Group'] instanceof Group) {
+            $this->recordValidateParamsError('$relevantData is expected to contain an integer for CourseId .');
+            return false;
         }
-        if (! isset($relevantData['Member']) && $relevantData['Member'] instanceof Group) {
-            $this->paramValidationErrors[] = '$relevantData is expected to contain an integer for UserId .';
-            $result = false;
+        elseif (! isset($relevantData['Member']) && $relevantData['Member'] instanceof Group) {
+            $this->recordValidateParamsError('$relevantData is expected to contain an integer for UserId .');
+            return false;
+        } else {
+            return true;
         }
-        return $result;
 
     }
 

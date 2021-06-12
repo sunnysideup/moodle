@@ -42,6 +42,11 @@ abstract class MoodleAction {
         return $this->validateParams($relevantData);
     }
 
+    public function recordValidateParamsError(?string $string = 'error')
+    {
+        $this->logCommand($string, 'PARAMS_ERROR');
+    }
+
     public function getParamValidationErrors() : array
     {
         return $this->paramValidationErrors;

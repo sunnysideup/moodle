@@ -27,7 +27,13 @@ class UpdateUser Extends CreateUser
     {
         if($this->validateParams($relevantData)) {
             $data = $this->createData($relevantData);
+            // echo '<h1>Data To Be Send</h1>';
+            // print_r($data);
+            // user_error('Where do I come from?');
+            // die('sdf');
             $result = $this->runActionInner(['users' => [$data]], 'POST');
+            // echo '<h1>RESULT</h1>';
+            // print_r($result);
             if($result && $result->isSuccess()) {
                 return $relevantData->MoodleUid;
             } else {
@@ -50,7 +56,7 @@ class UpdateUser Extends CreateUser
             if($relevantData->MoodleUid) {
                 return true;
             } else {
-                $this->paramValidationErrors[] = 'This user does not have a MoodleUid.';
+                $this->recordValidateParamsError('This user does not have a MoodleUid.');
                 return false;
             }
         }

@@ -37,7 +37,7 @@ class GetCourses Extends MoodleAction
     protected function validateParams($relevantData) : bool
     {
         if(! is_array($relevantData)) {
-            $this->paramValidationErrors[] = '$relevantData should be an array';
+            $this->recordValidateParamsError('$relevantData should be an array');
             return false;
         } else {
             return true;
