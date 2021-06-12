@@ -2,13 +2,13 @@
 
 namespace Sunnysideup\Moodle\Api\Enrol;
 
-use Sunnysideup\Moodle\Api\MoodleAction;
-
-use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\ArrayList;
+
+use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
+use Sunnysideup\Moodle\Api\MoodleAction;
 
 
 class EnrolUser Extends MoodleAction

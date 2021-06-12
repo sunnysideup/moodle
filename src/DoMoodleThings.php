@@ -1,21 +1,21 @@
 <?php
 
 namespace Sunnysideup\Moodle;
+use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Extensible;
+use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
-use SilverStripe\Core\Injector\Injectable;
-use SilverStripe\Core\Config\Configurable;
-use SilverStripe\Core\Extensible;
-use SilverStripe\ORM\DataList;
-use SilverStripe\ORM\DataObject;
-use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromEmail;
-use Sunnysideup\Moodle\Api\Users\CreateUser;
-use Sunnysideup\Moodle\Api\Users\UpdateUser;
-use Sunnysideup\Moodle\Api\Users\GetUsers;
 use Sunnysideup\Moodle\Api\Courses\GetCourses;
 use Sunnysideup\Moodle\Api\Enrol\EnrolUser;
+use Sunnysideup\Moodle\Api\Users\CreateUser;
+use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromEmail;
+use Sunnysideup\Moodle\Api\Users\GetUsers;
+use Sunnysideup\Moodle\Api\Users\UpdateUser;
 
 use Sunnysideup\Moodle\Model\Extensions\GroupExtension;
 

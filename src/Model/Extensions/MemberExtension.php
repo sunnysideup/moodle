@@ -1,7 +1,6 @@
 <?php
 namespace Sunnysideup\Moodle\Model\Extensions;
 
-use SilverStripe\Forms\TextareaField;
 use SilverStripe\Control\Controller;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\DropdownField;
@@ -9,6 +8,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\Tab;
 use SilverStripe\Forms\TabSet;
+use SilverStripe\Forms\TextareaField;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\Filters\ExactMatchFilter;
 use SilverStripe\ORM\Filters\PartialMatchFilter;

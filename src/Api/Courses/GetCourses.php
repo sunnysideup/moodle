@@ -2,10 +2,10 @@
 
 namespace Sunnysideup\Moodle\Api\Courses;
 
-use Sunnysideup\Moodle\Api\MoodleAction;
+use SilverStripe\ORM\ArrayList;
 
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\ArrayList;
+use Sunnysideup\Moodle\Api\MoodleAction;
 
 class GetCourses Extends MoodleAction
 {

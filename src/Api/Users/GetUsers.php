@@ -2,13 +2,13 @@
 
 namespace Sunnysideup\Moodle\Api\Users;
 
-use Sunnysideup\Moodle\Api\MoodleAction;
-
-use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ArrayList;
 
+use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
+
 use Sunnysideup\Moodle\Api\Converters\UserToMoodleUserConversionApi;
+use Sunnysideup\Moodle\Api\MoodleAction;
 class GetUsers Extends MoodleAction
 {
     protected $method = 'core_user_get_users_by_field';

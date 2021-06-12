@@ -2,14 +2,14 @@
 
 namespace Sunnysideup\Moodle\Api;
 
-use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
-use Sunnysideup\Moodle\Model\MoodleLog;
+use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 use Sunnysideup\Moodle\Api\MoodleResponse;
 use Sunnysideup\Moodle\Api\MoodleWebservice;
-use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Core\Injector\Injectable;
+use Sunnysideup\Moodle\Model\MoodleLog;
 
 abstract class MoodleAction {
 

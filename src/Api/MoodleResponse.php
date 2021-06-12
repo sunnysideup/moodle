@@ -2,9 +2,9 @@
 
 namespace Sunnysideup\Moodle\Api;
 
-use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\ArrayList;
+use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\DataObject;
 
 /**
  * class used to respond with JSON requests
