@@ -2,14 +2,10 @@
 
 namespace Sunnysideup\Moodle\Api\Users;
 
-use SilverStripe\ORM\ArrayList;
-
-use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
-
-use Sunnysideup\Moodle\Api\Converters\UserToMoodleUserConversionApi;
 use Sunnysideup\Moodle\Api\MoodleAction;
-class GetUsers Extends MoodleAction
+
+class GetUsers extends MoodleAction
 {
     protected $method = 'core_user_get_users_by_field';
 
@@ -23,24 +19,29 @@ class GetUsers Extends MoodleAction
 
     public function runAction($relevantData)
     {
-        if($this->validateParams($relevantData)) {
-            $params = ['field' => 'idnumber', 'values' => [$relevantData->ID]];
+        if ($this->validateParams($relevantData)) {
+            $params = [
+                'field' => 'idnumber',
+                'values' => [$relevantData->ID],
+            ];
             $result = $this->runActionInner($params);
+
             return $this->processResults($result);
         }
+
         return false;
     }
 
-    protected function validateParams($relevantData) : bool
+    protected function validateParams($relevantData): bool
     {
         if (! $relevantData instanceof Member) {
             $this->recordValidateParamsError('
-                We need an '.Member::class.' to create this login.
-                You provided: '.print_r($relevantData, 1));
-            return false;
-        } else {
-            return true;
-        }
-    }
+                We need an ' . Member::class . ' to create this login.
+                You provided: ' . print_r($relevantData, 1));
 
+            return false;
+        }
+
+        return true;
+    }
 }

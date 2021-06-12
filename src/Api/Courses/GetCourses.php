@@ -2,14 +2,10 @@
 
 namespace Sunnysideup\Moodle\Api\Courses;
 
-use SilverStripe\ORM\ArrayList;
-
-use SilverStripe\ORM\DataObject;
 use Sunnysideup\Moodle\Api\MoodleAction;
 
-class GetCourses Extends MoodleAction
+class GetCourses extends MoodleAction
 {
-
     protected $method = 'core_course_get_courses';
 
     protected $resultGetArray = true;
@@ -22,26 +18,26 @@ class GetCourses Extends MoodleAction
 
     public function runAction($relevantData)
     {
-        if($this->validateParams($relevantData)) {
-
+        if ($this->validateParams($relevantData)) {
             $params = [
-                'ids'=> $relevantData
+                'ids' => $relevantData,
             ];
             $result = $this->runActionInner($params);
 
             return $this->processResults($result);
         }
+
         return false;
     }
 
-    protected function validateParams($relevantData) : bool
+    protected function validateParams($relevantData): bool
     {
-        if(! is_array($relevantData)) {
+        if (! is_array($relevantData)) {
             $this->recordValidateParamsError('$relevantData should be an array');
-            return false;
-        } else {
-            return true;
-        }
-    }
 
+            return false;
+        }
+
+        return true;
+    }
 }

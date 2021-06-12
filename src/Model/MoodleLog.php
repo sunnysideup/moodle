@@ -8,7 +8,6 @@ use SilverStripe\Security\Security;
 
 class MoodleLog extends DataObject
 {
-
     private static $db = [
         'Action' => 'Varchar',
         'Params' => 'Text',
@@ -37,7 +36,7 @@ class MoodleLog extends DataObject
     {
         parent::onBeforeWrite();
         $member = Security::getCurrentUser();
-        if($member) {
+        if ($member) {
             $this->MemberID = Security::getCurrentUser()->ID;
         }
     }
@@ -51,5 +50,4 @@ class MoodleLog extends DataObject
     {
         return false;
     }
-
 }

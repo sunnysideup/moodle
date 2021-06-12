@@ -1,39 +1,27 @@
 <?php
+
 namespace Sunnysideup\Moodle\Model\Extensions;
 
-use SilverStripe\Control\Controller;
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Forms\DropdownField;
-use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\HeaderField;
-use SilverStripe\Forms\Tab;
-use SilverStripe\Forms\TabSet;
-use SilverStripe\Forms\TextareaField;
 use SilverStripe\ORM\DataExtension;
-use SilverStripe\ORM\Filters\ExactMatchFilter;
-use SilverStripe\ORM\Filters\PartialMatchFilter;
 use SilverStripe\Security\Group;
-use SilverStripe\Security\Member;
 
 class MemberExtension extends DataExtension
 {
-
-    private static $db =[
+    private static $db = [
         'MoodleUid' => 'Int',
     ];
 
-    private static $indexes =[
+    private static $indexes = [
         'MoodleUid' => true,
     ];
 
-    public function IsRegisteredOnMoodle() : bool
+    public function IsRegisteredOnMoodle(): bool
     {
         return (bool) $this->owner->MoodleUid;
     }
 
-    public function IsRegisteredOnCourse(Group $group) : bool
+    public function IsRegisteredOnCourse(Group $group): bool
     {
         return $this->owner->Groups()->filter(['ID' => $group->ID])->count() > 0;
     }
-
 }
