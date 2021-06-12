@@ -31,41 +31,43 @@ class EnrolUser Extends MoodleAction
 
     public function runAction($relevantData)
     {
-        $this->validateParam($relevantData);
-        extract($relevantData);
-        $params = [
-            'enrolments' => [
-                [
-                    'roleid' => self::STUDENT_ROLE_ID,
-                    'userid' => $Member->MoodleUid,
-                    'courseid' => $Group->MoodleUid,
+        if($this->validateParams($relevantData)) {
+            extract($relevantData);
+            $params = [
+                'enrolments' => [
+                    [
+                        'roleid' => self::STUDENT_ROLE_ID,
+                        'userid' => $Member->MoodleUid,
+                        'courseid' => $Group->MoodleUid,
+                    ]
                 ]
-            ]
-        ];
-        $result = $this->runActionInner($params);
-        return $this->processResults($result);
+            ];
+            $result = $this->runActionInner($params);
+            return $this->processResults($result);
+        }
+        return false;
     }
 
-    protected function validateParam($relevantData)
+    protected function validateParams($relevantData) : bool
     {
+        $result = true;
         if(! is_array($relevantData)) {
-            user_error('$relevantData is expected to be an array with two keys (CourseId and UserId).');
+            $this->paramValidationErrors[] = '$relevantData is expected to be an array with two keys (CourseId and UserId).';
+            $result = false;
         }
         if(! count($relevantData) == 2) {
-            user_error('$relevantData is expected to see exactly two parameters. Group and Member.');
+            $this->paramValidationErrors[] = '$relevantData is expected to see exactly two parameters. Group and Member.';
+            $result = false;
         }
-        if (!
-            isset($relevantData['Group']) &&
-            $relevantData['Group'] instanceof Group
-        ) {
-            user_error('$relevantData is expected to contain an integer for CourseId .');
+        if (! isset($relevantData['Group']) && $relevantData['Group'] instanceof Group) {
+            $this->paramValidationErrors[] = '$relevantData is expected to contain an integer for CourseId .';
+            $result = false;
         }
-        if (!
-            isset($relevantData['Member']) &&
-            $relevantData['Member'] instanceof Group
-        ) {
-            user_error('$relevantData is expected to contain an integer for UserId .');
+        if (! isset($relevantData['Member']) && $relevantData['Member'] instanceof Group) {
+            $this->paramValidationErrors[] = '$relevantData is expected to contain an integer for UserId .';
+            $result = false;
         }
+        return $result;
 
     }
 

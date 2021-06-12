@@ -23,19 +23,24 @@ class GetUsers Extends MoodleAction
 
     public function runAction($relevantData)
     {
-        $this->validateParam($relevantData);
+        if($this->validateParams($relevantData)) {
 
-        $params = ['field' => 'email', 'values' => [$relevantData->Email]];
+            $params = ['field' => 'email', 'values' => [$relevantData->Email]];
 
-        $result = $this->runActionInner($params);
+            $result = $this->runActionInner($params);
 
-        return $this->processResults($result);
+            return $this->processResults($result);
+        }
+        return false;
     }
 
-    protected function validateParam($relevantData)
+    protected function validateParams($relevantData) : bool
     {
         if (! $relevantData instanceof Member) {
-            user_error('$relevantData is expected to be a '.Member::class);
+            $this->paramValidationErrors[] = 'We need an '.Member::class.' to create this login. You provided: '.print_r($relevantData, 1);
+            return false;
+        } else {
+            return true;
         }
     }
 

@@ -22,20 +22,25 @@ class GetCourses Extends MoodleAction
 
     public function runAction($relevantData)
     {
-        $this->validateParam($relevantData);
+        if($this->validateParams($relevantData)) {
 
-        $params = [
-            'ids'=> $relevantData
-        ];
-        $result = $this->runActionInner($params);
+            $params = [
+                'ids'=> $relevantData
+            ];
+            $result = $this->runActionInner($params);
 
-        return $this->processResults($result);
+            return $this->processResults($result);
+        }
+        return false;
     }
 
-    protected function validateParam($relevantData)
+    protected function validateParams($relevantData) : bool
     {
         if(! is_array($relevantData)) {
-            user_error('$relevantData should be an array');
+            $this->paramValidationErrors[] = '$relevantData should be an array';
+            return false;
+        } else {
+            return true;
         }
     }
 

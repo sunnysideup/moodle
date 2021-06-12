@@ -7,10 +7,19 @@ use SilverStripe\Control\Director;
 use SilverStripe\Core\Environment;
 use Sunnysideup\Moodle\Model\MoodleLog;
 use Sunnysideup\Moodle\Api\MoodleResponse;
+use Sunnysideup\Moodle\Api\MoodleWebservice;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Injector\Injectable;
 
 abstract class MoodleAction {
 
     use Configurable;
+
+    use Injectable;
+
+    private static $moodle_service_provider = MoodleWebservice::class;
+
+    private static $log = true;
 
     protected $method = 'please-set-in-child-class';
 
@@ -24,11 +33,21 @@ abstract class MoodleAction {
 
     protected $resultVariableType = 'string';
 
+    protected $paramValidationErrors = [];
+
     abstract public function runAction($relevantData);
 
-    abstract protected function validateParam($relevantData);
+    public function validateParamsOnly($relevantData) : bool
+    {
+        return $this->validateParams($relevantData);
+    }
 
-    private static $log = true;
+    public function getParamValidationErrors() : array
+    {
+        return $this->paramValidationErrors;
+    }
+
+    abstract protected function validateParams($relevantData) : bool;
 
     final protected function runActionInner($params = [], ?string $methodType = 'POST')
     {
@@ -88,9 +107,10 @@ abstract class MoodleAction {
 
     final protected function getApi()
     {
-        $moodle = MoodleWebservice::connect();
-        if(!$moodle) {
-            return Debug::message('Failed to connect to Moodle Webservice'.print_r(MoodleWebservice::getErrors(), 1));
+        $className = $this->Config()->get('moodle_service_provider');
+        $moodle = $className::connect();
+        if(! $moodle) {
+            return Debug::message('Failed to connect to Moodle Webservice'.print_r($className::getErrors(), 1));
         }
         return $moodle;
     }

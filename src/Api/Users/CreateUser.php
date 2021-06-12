@@ -32,21 +32,26 @@ class CreateUser Extends MoodleAction
 
     public function runAction($relevantData)
     {
-        $this->validateParam($relevantData);
-        $data = $this->createData($relevantData);
-        $result = parent::runActionInner(['users' => [$data]], 'POST');
+        if ($this->validateParams($relevantData)) {
+            $data = $this->createData($relevantData);
+            $result = $this->runActionInner(['users' => [$data]], 'POST');
 
-        return $this->processResults($result);
+            return $this->processResults($result);
+        }
+        return false;
     }
 
-    protected function validateParam($relevantData)
+    protected function validateParams($relevantData) : bool
     {
         if (! $relevantData instanceof Member) {
-            user_error('$relevantData is expected to be a '.Member::class);
+            $this->paramValidationErrors[] = 'We need an '.Member::class.' to create this login. You provided: '.print_r($relevantData, 1);
+            return false;
+        } else {
+            return true;
         }
     }
 
-    protected function createData($relevantData)
+    protected function createData(Member $relevantData) : array
     {
         $data = $this->getConverter()->toMoodle($relevantData, $this->createPassword);
         $data['password'] = $this->randomPassword();

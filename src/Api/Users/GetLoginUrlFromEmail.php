@@ -7,6 +7,8 @@ use Sunnysideup\Moodle\Api\MoodleAction;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ArrayList;
 
+use SilverStripe\Security\Member;
+
 class GetLoginUrlFromEmail Extends MoodleAction
 {
     protected $method = 'auth_userkey_request_login_url';
@@ -21,25 +23,29 @@ class GetLoginUrlFromEmail Extends MoodleAction
 
     public function runAction($relevantData)
     {
-        if(! $relevantData) {
-            return '';
+        if($this->validateParams($relevantData)) {
+            $params= [
+                'user' => [
+                    'email' => $relevantData->Email,
+                ]
+            ];
+            $result = $this->runActionInner($params);
+            return $this->processResults($result);
         }
-        $this->validateParam($relevantData);
-        $params= [
-            'user' => [
-                'email' => $relevantData,
-            ]
-        ];
-        $result = parent::runActionInner($params);
-
-        return $this->processResults($result);
-
+        return false;
     }
 
-    protected function validateParam($relevantData)
+    protected function validateParams($relevantData) : bool
     {
-        if($relevantData && ! filter_var($relevantData, FILTER_VALIDATE_EMAIL)) {
-            user_error('We expect an email here.');
+        if(! $relevantData instanceof Member) {
+            $this->paramValidationErrors[] = 'We need an '.Member::class.' to create this login. You provided: '.print_r($relevantData, 1);
+            return false;
+        }
+        if($relevantData->Email && filter_var($relevantData->Email, FILTER_VALIDATE_EMAIL)) {
+            return true;
+        } else {
+            $this->paramValidationErrors[] = 'We expect an email here, you provided ' . $relevantData->Email;
+            return false;
         }
     }
 

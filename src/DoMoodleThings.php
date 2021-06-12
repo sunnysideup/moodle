@@ -8,6 +8,7 @@ use SilverStripe\Security\Security;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
+use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromEmail;
 use Sunnysideup\Moodle\Api\Users\CreateUser;
@@ -30,25 +31,32 @@ class DoMoodleThings
      * @param  string $email optional
      * @return string        link
      */
-    public function getUserSsoLink(?string $email = '') : string
+    public function getUserSsoLink(?Member $member = null) : string
     {
-        if(! $email) {
-            $member = Security::getCurrentUser();
-            if($member) {
-                $email = $member->Email;
-            }
+        $member = $member ?: Security::getCurrentUser();
+        if($member) {
+            $email = $member->Email;
+            $obj = Injector::inst()->get(GetLoginUrlFromEmail::class);
+            return $obj->runAction($email);
         }
-        $obj = new GetLoginUrlFromEmail();
-        return $obj->runAction($email);
+        return '';
     }
 
-    public function getCourses()
+    /**
+     * get an array of all courses on Moodle
+     * @return array
+     */
+    public function getCourses() : array
     {
-        $obj = new GetCourses();
+        $obj = Injector::inst()->get(GetCourses::class);
         return $obj->runAction([]);
     }
 
-    public function syncCourses()
+
+    /**
+     * synchronise all Moodle Courses to SS Groups
+     */
+    public function syncCourses() : DataList
     {
         $existingGpsArray = array_flip(Group::get()->filter(['CanEnrolWithMoodle' => true])->columnUnique());
         $courses = $this->getCourses();
@@ -66,40 +74,49 @@ class DoMoodleThings
                 }
             }
         }
+        return Group::get()->filter(['CanEnrolWithMoodle' => true]);
     }
 
+    /**
+     * add user in Moodle from Member
+     * returns the MoodleUid assigned to the user.
+     * @param  ?Member $member
+     * @return int
+     */
     public function addUser(?Member $member = null) : int
     {
-        if(! $member) {
-            $member = Security::getCurrentUser();
-        }
+        $member = $member ?: Security::getCurrentUser();
         if($member) {
             if($member->IsRegisteredOnMoodle()) {
                 $this->updateUser($member);
             } else {
-                $obj = new CreateUser();
+                $obj = Injector::inst()->get(CreateUser::class);
                 $id = $obj->runAction($member);
-                $member->MoodleUid = $id;
-                $member->write();
+                if($id && intval($id) === $id) {
+                    $member->MoodleUid = $id;
+                    $member->write();
+                }
             }
             return (int) $member->MoodleUid;
         }
         return 0;
     }
 
-    protected $updateUserCount = 0;
-
-    public function updateUser($member)
+    /**
+     * update the user details on Moodle
+     * @param  Member   $member
+     * @param  bool     $createMemberIfDoesNotExist
+     * @return int            [description]
+     */
+    public function updateUser(?Member $member = null, ?bool $createMemberIfDoesNotExist = true) : int
     {
-        if(! $member) {
-            $member = Security::getCurrentUser();
-        }
+        $member = $member ?: Security::getCurrentUser();
         if($member) {
             if($member->IsRegisteredOnMoodle()) {
-                $obj = new UpdateUser();
+                $obj = Injector::inst()->get(UpdateUser::class);
                 $obj->runAction($member);
-            } else {
-                $this->createUser($member);
+            } elseif($createMemberIfDoesNotExist) {
+                $this->addUser($member);
             }
             return (int) $member->MoodleUid;
         }
@@ -108,18 +125,8 @@ class DoMoodleThings
 
     public function getUsers($member)
     {
-        if(! $member) {
-            $member = Security::getCurrentUser();
-        }
-        if($member) {
-            if($member->IsRegisteredOnMoodle()) {
-                $obj = new GetUsers();
-                return $obj->runAction($member);
-            } else {
-                return [];
-            }
-        }
-        return [];
+        $obj = Injector::inst()->get(GetUsers::class);
+        return $obj->runAction($member);
     }
 
     public function getGroupFromMoodleCourseId(int $courseId) : ?Group
@@ -127,20 +134,20 @@ class DoMoodleThings
         return DataObject::get_one(Group::class, ['MoodleUid' => $courseId]);
     }
 
-    public function enrolUserOnCourse(Group $group, ?Member $member = null)
+    public function enrolUserOnCourse(Group $group, ?Member $member = null) : bool
     {
         $outcome = false;
-        if(! $member) {
-            $member = Security::getCurrentUser();
-        }
+        $member = $member ?: Security::getCurrentUser();
         if($member) {
             $outcome = false;
             if($group && $group->MoodleUid) {
                 $outcome = true;
                 if(! $member->IsRegisteredOnCourse($group)) {
-                    $obj = new EnrolUser();
+                    $obj = Injector::inst()->get(EnrolUser::class);
                     $outcome = $obj->runAction(['Member' => $member, 'Group' => $group]);
-                    $group->Members()->add($member);
+                    if($outcome) {
+                        $group->Members()->add($member);
+                    }
                 }
             }
             $this->updateUser($member);
