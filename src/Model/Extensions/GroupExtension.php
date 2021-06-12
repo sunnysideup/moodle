@@ -145,18 +145,40 @@ class GroupExtension extends DataExtension
         return null;
     }
 
-    public function canDelete($member = null)
+    /**
+     * Influence the owner's canDelete() permission check value to be disallowed (false),
+     * allowed (true) if no other processed results are to disallow, or open (null) to not
+     * affect the outcome.
+     *
+     * See {@link DataObject::canDelete()} and {@link DataObject::extendedCan()} for context.
+     *
+     * @param Member $member
+     * @return bool|null
+     */
+    public function canDelete($member)
     {
         if($this->owner->findOrCreateMoodleHolderGroup()->ID === $this->owner->ID || $this->owner->MoodleUid) {
             return false;
         }
+        return null;
     }
 
-    public function canEdit($member = null)
+    /**
+     * Influence the owner's canDelete() permission check value to be disallowed (false),
+     * allowed (true) if no other processed results are to disallow, or open (null) to not
+     * affect the outcome.
+     *
+     * See {@link DataObject::canDelete()} and {@link DataObject::extendedCan()} for context.
+     *
+     * @param Member $member
+     * @return bool|null
+     */
+    public function canEdit($member)
     {
         if($this->owner->findOrCreateMoodleHolderGroup()->ID === $this->owner->ID) {
             return false;
         }
+        return null;
     }
 
     public function findOrCreateMoodleHolderGroup() : Group

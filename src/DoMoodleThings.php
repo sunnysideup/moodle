@@ -28,8 +28,8 @@ class DoMoodleThings
     /**
      * returns SSO link for Moodle for current user or any other email address
      *
-     * @param  string $email optional
-     * @return string        link
+     * @param  Member $member optional
+     * @return string         link
      */
     public function getUserSsoLink(?Member $member = null) : string
     {

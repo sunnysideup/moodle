@@ -7,6 +7,9 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
+
+use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
 /**
@@ -24,6 +27,7 @@ use SilverStripe\Security\Security;
 class MoodleWebservice {
 
     use Configurable;
+    use Injectable;
 
     /**
      * @var string
@@ -73,7 +77,7 @@ class MoodleWebservice {
      *
      * Alternatively you can set one in moodle.yml, it will still return an instance.
      *
-     * @return \MoodleWebservice|null
+     * @return MoodleWebservice|null
      */
 
     public static function connect() {
@@ -89,7 +93,7 @@ class MoodleWebservice {
         $authentication = self::config()->get('authentication');
 
         if (isset($authentication['statictoken']) && $authentication['statictoken']) {
-            MoodleWebservice::$instance = new static();
+            MoodleWebservice::$instance = Injector::inst()->get(MoodleWebservice::class);
             MoodleWebservice::$token = $authentication['statictoken'];
             return MoodleWebservice::$instance;
         }
@@ -148,7 +152,7 @@ class MoodleWebservice {
             }
             // success!
             if (property_exists($authjson, 'token') && $authjson->token !== null) {
-                MoodleWebservice::$instance = new static();
+                MoodleWebservice::$instance = Injector::inst()->get(MoodleWebservice::class);
                 MoodleWebservice::$token = $authjson->token;
                 return MoodleWebservice::$instance;
             }
@@ -168,7 +172,7 @@ class MoodleWebservice {
 
     /**
      * checks the environment type, and returns the connection string
-     * @return type string
+     * @return string string
      */
     public static function getLocation() {
         $urltype = self::config()->get('authentication');
@@ -320,16 +324,16 @@ class MoodleWebservice {
     /**
      * Set HTTP Request Header
      *
-     * @param array $headers
+     * @param array|string $headerOrHeaders
      *
      */
-    public function setHeader($header) {
-        if (is_array($header)) {
-            foreach ($header as $v) {
+    public function setHeader($headerOrHeaders) {
+        if (is_array($headerOrHeaders)) {
+            foreach ($headerOrHeaders as $v) {
                 $this->setHeader($v);
             }
         } else {
-            $this->header[] = $header;
+            $this->header[] = $headerOrHeaders;
         }
     }
 
@@ -571,7 +575,8 @@ class MoodleWebservice {
      * @param array $options
      * @return bool
      */
-    private function post($url, $params = '', $options = []) {
+    private function post(string $url, $params = '', ?array $options = []) : bool
+    {
         $options['CURLOPT_POST'] = 1;
         if (is_array($params)) {
             $params = $this->format_postdata_for_curlcall($params);
@@ -588,7 +593,8 @@ class MoodleWebservice {
      * @param array $options
      * @return bool
      */
-    private function get($url, $params = [], $options = []) {
+    private function get(string $url, ?array $params = [], ?array $options = []) : bool
+    {
         $options['CURLOPT_HTTPGET'] = 1;
 
         if (!empty($params)) {
@@ -606,7 +612,8 @@ class MoodleWebservice {
      * @param array $options
      * @return bool
      */
-    private function put($url, $params = [], $options = []) {
+    private function put(string $url, ?array $params = [], ?array $options = []) : bool
+    {
         $file = $params['file'];
         if (!is_file($file)) {
             return null;
@@ -632,7 +639,8 @@ class MoodleWebservice {
      * @param array $options
      * @return bool
      */
-    private function delete($url, $param = [], $options = []) {
+    private function delete(string $url, ?array $params = [], ?array $options = []) : bool
+    {
         $options['CURLOPT_CUSTOMREQUEST'] = 'DELETE';
         if (!isset($options['CURLOPT_USERPWD'])) {
             $options['CURLOPT_USERPWD'] = 'anonymous: noreply@moodle.org';
@@ -648,7 +656,8 @@ class MoodleWebservice {
      * @param array $options
      * @return bool
      */
-    public function trace($url, $options = []) {
+    public function trace(string $url, ?array $options = []) : bool
+    {
         $options['CURLOPT_CUSTOMREQUEST'] = 'TRACE';
         $ret = $this->request($url, $options);
         return $ret;
@@ -661,7 +670,8 @@ class MoodleWebservice {
      * @param array $options
      * @return bool
      */
-    public function options($url, $options = []) {
+    public function options(string $url, ?array $options = []) : bool
+    {
         $options['CURLOPT_CUSTOMREQUEST'] = 'OPTIONS';
         $ret = $this->request($url, $options);
         return $ret;

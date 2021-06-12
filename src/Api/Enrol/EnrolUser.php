@@ -31,19 +31,23 @@ class EnrolUser Extends MoodleAction
 
     public function runAction($relevantData)
     {
+        $Member = null;
+        $Group = null;
         if($this->validateParams($relevantData)) {
             extract($relevantData);
-            $params = [
-                'enrolments' => [
-                    [
-                        'roleid' => self::STUDENT_ROLE_ID,
-                        'userid' => $Member->MoodleUid,
-                        'courseid' => $Group->MoodleUid,
+            if($Member && $Group) {
+                $params = [
+                    'enrolments' => [
+                        [
+                            'roleid' => self::STUDENT_ROLE_ID,
+                            'userid' => $Member->MoodleUid,
+                            'courseid' => $Group->MoodleUid,
+                        ]
                     ]
-                ]
-            ];
-            $result = $this->runActionInner($params);
-            return $this->processResults($result);
+                ];
+                $result = $this->runActionInner($params);
+                return $this->processResults($result);
+            }
         }
         return false;
     }
