@@ -95,7 +95,7 @@ class DoMoodleThings
             } else {
                 $obj = Injector::inst()->get(CreateUser::class);
                 $id = $obj->runAction($member);
-                if ($id && intval($id) === $id) {
+                if ($id && (int) $id === $id) {
                     $member->MoodleUid = $id;
                     $member->write();
                 }

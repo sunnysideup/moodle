@@ -32,15 +32,6 @@ class MoodleLog extends DataObject
 
     private static $table_name = 'MoodleLog';
 
-    public function onBeforeWrite()
-    {
-        parent::onBeforeWrite();
-        $member = Security::getCurrentUser();
-        if ($member) {
-            $this->MemberID = Security::getCurrentUser()->ID;
-        }
-    }
-
     public function canEdit($member = null)
     {
         return false;
@@ -49,5 +40,14 @@ class MoodleLog extends DataObject
     public function canDelete($member = null)
     {
         return false;
+    }
+
+    protected function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        $member = Security::getCurrentUser();
+        if ($member) {
+            $this->MemberID = Security::getCurrentUser()->ID;
+        }
     }
 }

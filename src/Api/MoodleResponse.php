@@ -89,7 +89,7 @@ class MoodleResponse
     private function parseobject($array)
     {
         if (is_object($array)) {
-            if ('DataObject' === get_class($array)) {
+            if ($array instanceof \DataObject) {
                 return $array;
             }
             $do = DataObject::create();

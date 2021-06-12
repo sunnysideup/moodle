@@ -8,7 +8,6 @@ use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
-use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\Permission;
 
 /**
@@ -102,7 +101,7 @@ class MoodleWebservice
         $authentication = self::config()->get('authentication');
 
         if (isset($authentication['statictoken']) && $authentication['statictoken']) {
-            MoodleWebservice::$instance = Injector::inst()->get(MoodleWebservice::class);
+            MoodleWebservice::$instance = new MoodleWebservice();
             MoodleWebservice::$token = $authentication['statictoken'];
 
             return MoodleWebservice::$instance;
@@ -166,7 +165,7 @@ class MoodleWebservice
             }
             // success!
             if (property_exists($authjson, 'token') && null !== $authjson->token) {
-                MoodleWebservice::$instance = Injector::inst()->get(MoodleWebservice::class);
+                MoodleWebservice::$instance = new MoodleWebservice();
                 MoodleWebservice::$token = $authjson->token;
 
                 return MoodleWebservice::$instance;
@@ -542,14 +541,13 @@ class MoodleWebservice
     {
         // Clean up
         $this->cleanopt();
-        
+
         if (! empty($this->cookie) || ! empty($options['cookie'])) {
             $this->setopt(['cookiejar' => $this->cookie,
                 'cookiefile' => $this->cookie,
             ]);
         }
 
-        
         if (! empty($this->proxy) || ! empty($options['proxy'])) {
             $this->setopt($this->proxy);
         }
@@ -558,7 +556,7 @@ class MoodleWebservice
         curl_setopt($curl, CURLOPT_HEADERFUNCTION, function ($ch, string $header): int {
             return $this->formatHeader($ch, $header);
         });
-        
+
         if (empty($this->header)) {
             $this->setHeader([
                 'User-Agent: MoodleBot/1.0',
@@ -568,7 +566,6 @@ class MoodleWebservice
         }
         curl_setopt($curl, CURLOPT_HTTPHEADER, $this->header);
 
-        
         foreach ($this->options as $name => $val) {
             if (is_string($name)) {
                 $name = constant(strtoupper($name));
