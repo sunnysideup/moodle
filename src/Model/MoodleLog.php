@@ -16,8 +16,10 @@ class MoodleLog extends DataObject
         'Error' => 'Text',
     ];
     private static $summary_fields = [
+        'Created' => 'When',
+        'Member.Email' => 'User',
         'Action' => 'Action',
-        'IsSuccess.Nice' => 'Outcome',
+        'IsSuccess.Nice' => 'Success?',
     ];
 
     private static $default_sort = 'Created DESC';
@@ -46,8 +48,8 @@ class MoodleLog extends DataObject
     {
         parent::onBeforeWrite();
         $member = Security::getCurrentUser();
-        if ($member) {
-            $this->MemberID = Security::getCurrentUser()->ID;
+        if ($member && $member->exists()) {
+            $this->MemberID = $member->ID;
         }
     }
 }
