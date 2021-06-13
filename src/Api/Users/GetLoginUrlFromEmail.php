@@ -2,14 +2,10 @@
 
 namespace Sunnysideup\Moodle\Api\Users;
 
+use SilverStripe\Security\Member;
 use Sunnysideup\Moodle\Api\MoodleAction;
 
-use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\ArrayList;
-
-use SilverStripe\Security\Member;
-
-class GetLoginUrlFromEmail Extends MoodleAction
+class GetLoginUrlFromEmail extends MoodleAction
 {
     protected $method = 'auth_userkey_request_login_url';
 
@@ -23,31 +19,32 @@ class GetLoginUrlFromEmail Extends MoodleAction
 
     public function runAction($relevantData)
     {
-        if($this->validateParams($relevantData)) {
-            $params= [
+        if ($this->validateParams($relevantData)) {
+            $params = [
                 'user' => [
                     'email' => $relevantData->Email,
-                ]
+                ],
             ];
             $result = $this->runActionInner($params);
+
             return $this->processResults($result);
         }
+
         return false;
     }
 
-    protected function validateParams($relevantData) : bool
+    protected function validateParams($relevantData): bool
     {
-        if(! $relevantData instanceof Member) {
-            $this->recordValidateParamsError('We need an '.Member::class.' to create this login. You provided: '.print_r($relevantData, 1));
+        if (! $relevantData instanceof Member) {
+            $this->recordValidateParamsError('We need an ' . Member::class . ' to create this login. You provided: ' . print_r($relevantData, 1));
+
             return false;
         }
-        if($relevantData->Email && filter_var($relevantData->Email, FILTER_VALIDATE_EMAIL)) {
+        if ($relevantData->Email && filter_var($relevantData->Email, FILTER_VALIDATE_EMAIL)) {
             return true;
-        } else {
-            $this->recordValidateParamsError('We expect an email here, you provided ' . $relevantData->Email);
-            return false;
         }
+        $this->recordValidateParamsError('We expect an email here, you provided ' . $relevantData->Email);
+
+        return false;
     }
-
-
 }

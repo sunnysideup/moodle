@@ -45,88 +45,93 @@ class UserToMoodleUserConversionApi
     public function toMoodle(Member $member, ?bool $createPassword = true)
     {
         $returnArray = [];
-        foreach($this->config()->get('conversion_array') as $details) {
+        foreach ($this->config()->get('conversion_array') as $details) {
             $ssField = $details['SilverstripeField'];
-            $moodleField  = $details['MoodleField'];
-            $type  = $details['Type'];
+            $moodleField = $details['MoodleField'];
+            $type = $details['Type'];
             $returnArray[$moodleField] = $this->getValueForMoodle($member, $ssField, $type);
         }
         $array['customfields'] = [];
-        foreach($this->config()->get('custom_fields') as $details) {
+        foreach ($this->config()->get('custom_fields') as $details) {
             $ssField = $details['SilverstripeField'];
-            $moodleField  = $details['MoodleField'];
-            $type  = $details['Type'];
+            $moodleField = $details['MoodleField'];
+            $type = $details['Type'];
             $returnArray['customfields'][] = [
                 'type' => $moodleField,
-                'value' =>  $this->getValueForMoodle($member, $ssField, $type)
+                'value' => $this->getValueForMoodle($member, $ssField, $type),
             ];
         }
 
-        if($createPassword) {
+        if ($createPassword) {
             $returnArray['createpassword'] = 1;
-        } else {
-            // $returnArray['createpassword'] = 0;
         }
+        // $returnArray['createpassword'] = 0;
+
         return $returnArray;
     }
 
     public function toSilverstripe(array $inputArray)
     {
         $returnArray = [];
-        foreach($this->config()->get('conversion_array') as $details) {
+        foreach ($this->config()->get('conversion_array') as $details) {
             $ssField = $details['SilverstripeField'];
-            $moodleField  = $details['MoodleField'];
-            $type  = $details['Type'];
+            $moodleField = $details['MoodleField'];
+            $type = $details['Type'];
             $value = $inputArray[$moodleField] ?? null;
             $returnArray[$ssField] = $this->getValueForSilverstripe($ssField, $value);
         }
         $array['customfields'] = [];
-        foreach($this->config()->get('custom_fields') as $details) {
+        foreach ($this->config()->get('custom_fields') as $details) {
             $ssField = $details['SilverstripeField'];
-            $moodleField  = $details['MoodleField'];
-            $type  = $details['Type'];
-            foreach($returnArray[$ssField] = $inputArray['customfields'] as $inputArrayInner) {
+            $moodleField = $details['MoodleField'];
+            $type = $details['Type'];
+            foreach ($returnArray[$ssField] = $inputArray['customfields'] as $inputArrayInner) {
                 $type = $inputArrayInner['type'] ?? '';
                 $value = $inputArrayInner['value'] ?? '';
-                if($type == $moodleField) {
+                if ($type === $moodleField) {
                     $returnArray[$ssField] = $this->getValueForSilverstripe($ssField, $value);
                 }
             }
         }
+
         return $returnArray;
     }
 
     protected function getValueForMoodle($obj, string $ssField, string $type)
     {
-        if($this->isRelation($ssField)) {
+        if ($this->isRelation($ssField)) {
             $val = $this->convertRelationToValue($obj, $ssField, $type);
-        } elseif($obj->hasMethod($ssField)) {
-            $val = $obj->$ssField();
+        } elseif ($obj->hasMethod($ssField)) {
+            $val = $obj->{$ssField}();
         } else {
-            $val = $obj->$ssField;
+            $val = $obj->{$ssField};
         }
         switch (strtolower($type)) {
             case 'int':
             case 'integer':
                 $val = (int) $val;
+
                 break;
             case 'bool':
             case 'boolean':
                 $val = $val ? 1 : 0;
+
                 break;
             case 'string':
             default:
                 $val = (string) $val;
         }
+
         return $val;
     }
+
     protected function getValueForSilverstripe($ssField, $value)
     {
-        if($this->isRelation($ssField)) {
+        if ($this->isRelation($ssField)) {
             return $this->convertValueToRelationId($ssField, $value);
-        } else {
-            return $value;
         }
+
+        return $value;
     }
 
     protected function isRelation($ssField): bool
@@ -138,30 +143,31 @@ class UserToMoodleUserConversionApi
     {
         $methods = explode('.', $ssField);
         $field = array_pop($methods);
-        foreach($methods as $method) {
-            $obj = $obj->$method();
+        foreach ($methods as $method) {
+            $obj = $obj->{$method}();
         }
+
         return $this->getValueForMoodle($obj, $field, $type);
     }
 
-    protected function convertValueToRelationId(string $ssField, string $value) : int
+    protected function convertValueToRelationId(string $ssField, string $value): int
     {
         $methods = explode('.', $ssField);
         $field = array_pop($methods);
         $obj = Injector::inst()->get(Member::class);
-        foreach($methods as $method) {
-            $obj = $obj->$method();
+        foreach ($methods as $method) {
+            $obj = $obj->{$method}();
         }
         $obj = DataObject::get_one($obj->ClassName, [$field => $value]);
-        if($obj) {
+        if ($obj) {
             return (int) $obj->ID;
         }
+
         return 0;
     }
 }
 
-
-/**
+/*
  * class used to respond with JSON requests
  *
  * createpassword int Optional //True if password should be created and mailed to user. username string //Username policy is defined in Moodle security config.

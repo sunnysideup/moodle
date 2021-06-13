@@ -1,44 +1,19 @@
 <?php
+
 namespace Sunnysideup\Moodle\Model\Extensions;
 
 use SilverStripe\Forms\CheckboxField;
-use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
-use SilverStripe\Forms\TextField;
-use SilverStripe\Forms\TextareaField;
-use SilverStripe\Control\Controller;
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Forms\DropdownField;
-use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\HeaderField;
-use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\Tab;
-use SilverStripe\Forms\TabSet;
+use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
+use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataExtension;
-use SilverStripe\ORM\Filters\ExactMatchFilter;
-use SilverStripe\ORM\Filters\PartialMatchFilter;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 
-
 class GroupExtension extends DataExtension
 {
-
-    private static $db =[
-        'MoodleUid' => 'Int',
-        'CanEnrolWithMoodle' => 'Boolean',
-        'DisplayName' => 'Varchar(100)',
-        'Summary' => 'HTMLText',
-        'StartDateTs' => 'Int',
-        'EndDateTs' => 'Int',
-    ];
-
-    private static $indexes =[
-        'MoodleUid' => true,
-    ];
-
     /**
      * @var string
      */
@@ -63,6 +38,19 @@ class GroupExtension extends DataExtension
      * @var string
      */
     private const MOODLE_GROUP_EXPLANATION = 'This group shows the members that are part of a Moodle Course';
+
+    private static $db = [
+        'MoodleUid' => 'Int',
+        'CanEnrolWithMoodle' => 'Boolean',
+        'DisplayName' => 'Varchar(100)',
+        'Summary' => 'HTMLText',
+        'StartDateTs' => 'Int',
+        'EndDateTs' => 'Int',
+    ];
+
+    private static $indexes = [
+        'MoodleUid' => true,
+    ];
 
     public function updateCMSFields(FieldList $fields)
     {
@@ -99,14 +87,16 @@ class GroupExtension extends DataExtension
                 ),
             ]
         );
+
         return $fields;
     }
 
-    public function IsRegisteredOnCourse(?Member $member = null) : bool
+    public function IsRegisteredOnCourse(?Member $member = null): bool
     {
-        if(! $member) {
+        if (! $member) {
             $member = Security::getCurrentUser();
         }
+
         return $this->owner->Members()->filter(['ID' => $member->ID ?? 0])->count() > 0;
     }
 
@@ -117,8 +107,8 @@ class GroupExtension extends DataExtension
             $holderGroup = $this->owner->findOrCreateMoodleHolderGroup();
             $this->owner->Locked = true;
             $this->owner->ParentID = $holderGroup->ID;
-            if( ! strpos($this->owner->Title, self::MOODLE_NAME_POST_FIX)) {
-                $this->owner->Title .= ' '.self::MOODLE_NAME_POST_FIX;
+            if (! strpos($this->owner->Title, self::MOODLE_NAME_POST_FIX)) {
+                $this->owner->Title .= ' ' . self::MOODLE_NAME_POST_FIX;
             }
             $this->owner->Description = self::MOODLE_GROUP_EXPLANATION;
         }
@@ -130,7 +120,7 @@ class GroupExtension extends DataExtension
         if ($id) {
             $filter = ['MoodleUid' => $id];
             $group = DataObject::get_one(Group::class, $filter);
-            if (!$group) {
+            if (! $group) {
                 $group = Group::create($filter);
             }
             $group->Title = $moodleData['displayname'] ?? '';
@@ -140,31 +130,59 @@ class GroupExtension extends DataExtension
             $group->StartDateTs = $moodleData['startdate'] ?? 0;
             $group->EndDateTs = $moodleData['enddate'] ?? 0;
             $group->write();
+
             return $group;
         }
+
         return null;
     }
 
-    public function canDelete($member = null)
+    /**
+     * Influence the owner's canDelete() permission check value to be disallowed (false),
+     * allowed (true) if no other processed results are to disallow, or open (null) to not
+     * affect the outcome.
+     *
+     * See {@link DataObject::canDelete()} and {@link DataObject::extendedCan()} for context.
+     *
+     * @param Member $member
+     *
+     * @return null|bool
+     */
+    public function canDelete($member)
     {
-        if($this->owner->findOrCreateMoodleHolderGroup()->ID === $this->owner->ID || $this->owner->MoodleUid) {
+        if ($this->owner->findOrCreateMoodleHolderGroup()->ID === $this->owner->ID || $this->owner->MoodleUid) {
             return false;
         }
+
+        return null;
     }
 
-    public function canEdit($member = null)
+    /**
+     * Influence the owner's canDelete() permission check value to be disallowed (false),
+     * allowed (true) if no other processed results are to disallow, or open (null) to not
+     * affect the outcome.
+     *
+     * See {@link DataObject::canDelete()} and {@link DataObject::extendedCan()} for context.
+     *
+     * @param Member $member
+     *
+     * @return null|bool
+     */
+    public function canEdit($member)
     {
-        if($this->owner->findOrCreateMoodleHolderGroup()->ID === $this->owner->ID) {
+        if ($this->owner->findOrCreateMoodleHolderGroup()->ID === $this->owner->ID) {
             return false;
         }
+
+        return null;
     }
 
-    public function findOrCreateMoodleHolderGroup() : Group
+    public function findOrCreateMoodleHolderGroup(): Group
     {
         $filter = ['Code' => self::MOODLE_PARENT_GROUP_CODE];
         $group = DataObject::get_one(Group::class, $filter);
-        if(! $group) {
-            $group =  Group::create($filter);
+        if (! $group) {
+            $group = Group::create($filter);
         }
         $group->Sort = 99999;
         $group->Locked = true;
@@ -184,6 +202,4 @@ class GroupExtension extends DataExtension
     {
         return $this->owner->EndDateTs ? date('Y-m-d', $this->owner->EndDateTs) : 'n/a';
     }
-
-
 }

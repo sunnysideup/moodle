@@ -2,25 +2,26 @@
 
 namespace Sunnysideup\Moodle\Api;
 
-use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\ArrayList;
+use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\DataObject;
 
 /**
- * class used to respond with JSON requests
+ * class used to respond with JSON requests.
  */
-class MoodleResponse {
-
+class MoodleResponse
+{
     private $error;
 
     private $content;
 
-    function __construct($content, $error) {
+    public function __construct($content, $error)
+    {
         $this->error = $error;
         $this->content = $content;
-        if(is_string($content)) {
+        if (is_string($content)) {
             $tmppar = json_decode($this->content);
-            if (is_object($tmppar) && (property_exists($tmppar, 'exception') && $tmppar->exception !== null)) {
+            if (is_object($tmppar) && (property_exists($tmppar, 'exception') && null !== $tmppar->exception)) {
                 $this->error = $content;
                 $this->content = null;
             }
@@ -30,65 +31,70 @@ class MoodleResponse {
         }
     }
 
-    public function hasError() : bool
+    public function hasError(): bool
     {
-        return !empty($this->content) && empty($this->error) ? false : true;
+        return ! empty($this->content) && empty($this->error) ? false : true;
     }
 
-    public function isSuccess() : bool
+    public function isSuccess(): bool
     {
         return ! $this->hasError();
     }
 
-    public function getError() : string
+    public function getError(): string
     {
         return $this->error;
     }
 
     /**
-     * JSON array of the result of the response
+     * JSON array of the result of the response.
+     *
      * @return string (json array)
      */
-    public function getContent() : string
+    public function getContent(): string
     {
         return $this->content;
     }
 
     /**
-     * Returns SilverStripe object representations of content
-     * @return DataObject|DataList|null
+     * Returns SilverStripe object representations of content.
+     *
+     * @return null|DataList|DataObject
      */
     public function getSilverstripeObject()
-     {
-        if(! is_string($this->content)) {
+    {
+        if (! is_string($this->content)) {
             return null;
         }
+
         return $this->parseobject(json_decode($this->content));
     }
 
-    public function getContentAsArray() : array
+    public function getContentAsArray(): array
     {
-        if(! $this->hasError()) {
+        if (! $this->hasError()) {
             return json_decode($this->content, true);
-        } else {
-            return [];
         }
+
+        return [];
     }
 
     /**
-     * Recursivity creates the SilverStripe dataobject represntation of content
+     * Recursivity creates the SilverStripe dataobject represntation of content.
+     *
      * @param mixed $array
-     * @return DataObject|DataList|null
+     *
+     * @return null|DataList|DataObject
      */
     private function parseobject($array)
     {
         if (is_object($array)) {
-            if (get_class($array) == 'DataObject') {
+            if ($array instanceof \DataObject) {
                 return $array;
             }
             $do = DataObject::create();
             foreach (get_object_vars($array) as $key => $obj) {
-                if ($key == '__Type') {
+                if ('__Type' === $key) {
                     $do->setField('Title', $obj);
                 } elseif (is_array($obj) || is_object($obj)) {
                     $do->setField($key, $this->parseobject($obj));
@@ -96,15 +102,18 @@ class MoodleResponse {
                     $do->setField($key, $obj);
                 }
             }
+
             return $do;
-        } elseif (is_array($array)) {
+        }
+        if (is_array($array)) {
             $dataList = ArrayList::create();
             foreach ($array as $obj) {
                 $dataList->push($this->parseobject($obj));
             }
+
             return $dataList;
         }
+
         return null;
     }
-
 }

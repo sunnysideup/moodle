@@ -8,7 +8,6 @@ use SilverStripe\Security\Security;
 
 class MoodleLog extends DataObject
 {
-
     private static $db = [
         'Action' => 'Varchar',
         'Params' => 'Text',
@@ -17,8 +16,10 @@ class MoodleLog extends DataObject
         'Error' => 'Text',
     ];
     private static $summary_fields = [
+        'Created' => 'When',
+        'Member.Email' => 'User',
         'Action' => 'Action',
-        'IsSuccess.Nice' => 'Outcome',
+        'IsSuccess.Nice' => 'Success?',
     ];
 
     private static $default_sort = 'Created DESC';
@@ -33,15 +34,6 @@ class MoodleLog extends DataObject
 
     private static $table_name = 'MoodleLog';
 
-    public function onBeforeWrite()
-    {
-        parent::onBeforeWrite();
-        $member = Security::getCurrentUser();
-        if($member) {
-            $this->MemberID = Security::getCurrentUser()->ID;
-        }
-    }
-
     public function canEdit($member = null)
     {
         return false;
@@ -52,4 +44,12 @@ class MoodleLog extends DataObject
         return false;
     }
 
+    protected function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        $member = Security::getCurrentUser();
+        if ($member && $member->exists()) {
+            $this->MemberID = $member->ID;
+        }
+    }
 }

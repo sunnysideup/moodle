@@ -1,5 +1,3 @@
 <?php
 
-
-define("MOODLEWORKINGFOLDER", realpath(dirname(__FILE__)));
-
+define('MOODLEWORKINGFOLDER', realpath(dirname(__FILE__)));
