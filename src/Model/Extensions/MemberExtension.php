@@ -36,4 +36,20 @@ class MemberExtension extends DataExtension
         return $this->owner->Groups()->filter(['ID' => $group->ID])->count() > 0;
     }
 
+     /**
+     * Update Fields.
+     *
+     * @return FieldList
+     */
+    public function updateCMSFields(FieldList $fields)
+    {
+        $fields->addFieldsToTab(
+            'Root.Moodle',
+            [
+                $fields->dataFieldByName('MoodleUid')->setReadOnly(true),
+            ],
+        );
+
+        return $fields;
+    }
 }
