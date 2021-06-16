@@ -175,7 +175,7 @@ class DoMoodleThings
         if($member->IsRegisteredOnMoodle()) {
             $array = $this->getUsers($member);
             $id = (int) $array['id'] ?? 0;
-            if( $test === (int) $member->MoodleUid) {
+            if( $id === (int) $member->MoodleUid) {
                 return true;
             } else {
                 $member->MoodleUid = 0;
