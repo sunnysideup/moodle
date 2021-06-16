@@ -173,7 +173,7 @@ class DoMoodleThings
     public function IsRegisteredOnMoodleWithCheck($member) : bool
     {
         if($member->IsRegisteredOnMoodle()) {
-            $array = $this->getApi()->getUsers($member);
+            $array = $this->getUsers($member);
             $id = (int) $array['id'] ?? 0;
             if( $test === (int) $member->MoodleUid) {
                 return true;
