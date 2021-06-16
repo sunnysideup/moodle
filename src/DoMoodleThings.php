@@ -94,7 +94,7 @@ class DoMoodleThings
     {
         $member = $member ?: Security::getCurrentUser();
         if ($member) {
-            if ($member->IsRegisteredOnMoodle()) {
+            if ($this->IsRegisteredOnMoodle($member)) {
                 $this->updateUser($member);
             } else {
                 $obj = Injector::inst()->get(CreateUser::class);
@@ -123,7 +123,7 @@ class DoMoodleThings
     {
         $member = $member ?: Security::getCurrentUser();
         if ($member) {
-            if ($member->IsRegisteredOnMoodle()) {
+            if ($this->IsRegisteredOnMoodle($member)) {
                 $obj = Injector::inst()->get(UpdateUser::class);
                 $obj->runAction($member);
             } elseif ($createMemberIfDoesNotExist) {
@@ -168,5 +168,22 @@ class DoMoodleThings
         }
 
         return $outcome;
+    }
+
+    public function IsRegisteredOnMoodleWithCheck($member) : bool
+    {
+        if($member->IsRegisteredOnMoodle()) {
+            $array = $this->getApi()->getUsers($member);
+            $id = (int) $array['id'] ?? 0;
+            if( $test === (int) $member->MoodleUid) {
+                return true;
+            } else {
+                $member->MoodleUid = 0;
+                $member->write();
+                return false;
+            }
+        }
+
+        return false;
     }
 }
