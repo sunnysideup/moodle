@@ -6,6 +6,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Environment;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
@@ -26,6 +27,11 @@ class DoMoodleThings
     use Injectable;
     use Configurable;
     use Extensible;
+
+    public function __construct()
+    {
+        Environment::setTimeLimitMax(120);
+    }
 
     /**
      * returns SSO link for Moodle for current user or any other email address.
