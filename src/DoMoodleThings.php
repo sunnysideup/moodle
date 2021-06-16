@@ -15,8 +15,10 @@ use Sunnysideup\Moodle\Api\Courses\GetCourses;
 use Sunnysideup\Moodle\Api\Enrol\EnrolUser;
 use Sunnysideup\Moodle\Api\Users\CreateUser;
 use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromEmail;
+use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromIdNumber;
 use Sunnysideup\Moodle\Api\Users\GetUsers;
 use Sunnysideup\Moodle\Api\Users\UpdateUser;
+use Sunnysideup\Moodle\Api\Users\GetSsoLink;
 use Sunnysideup\Moodle\Model\Extensions\GroupExtension;
 
 class DoMoodleThings
@@ -37,9 +39,11 @@ class DoMoodleThings
         $member = $member ?: Security::getCurrentUser();
         if ($member) {
             $email = $member->Email;
-            $obj = Injector::inst()->get(GetLoginUrlFromEmail::class);
+            $obj = Injector::inst()->get(GetSsoLink::class);
 
-            return $obj->runAction($member);
+            return $obj
+                ->setFilterType('idnumber')
+                ->runAction($member);
         }
 
         return '';
