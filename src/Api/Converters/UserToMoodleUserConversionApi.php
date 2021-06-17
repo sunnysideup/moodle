@@ -33,11 +33,6 @@ class UserToMoodleUserConversionApi
             'MoodleField' => 'email',
             'Type' => 'string',
         ],
-        [
-            'SilverstripeField' => 'Email',
-            'MoodleField' => 'username',
-            'Type' => 'string',
-        ],
     ];
 
     private static $custom_fields = [];
@@ -51,6 +46,8 @@ class UserToMoodleUserConversionApi
             $type = $details['Type'];
             $returnArray[$moodleField] = $this->getValueForMoodle($member, $ssField, $type);
         }
+        //fix username
+        $returnArray['username'] = $this->createUserName($member);
         $array['customfields'] = [];
         foreach ($this->config()->get('custom_fields') as $details) {
             $ssField = $details['SilverstripeField'];
@@ -61,7 +58,6 @@ class UserToMoodleUserConversionApi
                 'value' => $this->getValueForMoodle($member, $ssField, $type),
             ];
         }
-
         if ($createPassword) {
             $returnArray['createpassword'] = 1;
         }
@@ -164,6 +160,12 @@ class UserToMoodleUserConversionApi
         }
 
         return 0;
+    }
+
+    protected function createUserName(Member $member) : string
+    {
+        $username = preg_replace("/[^A-Za-z0-9 ]/", '', $member->Email);
+        return substr($username, 0, 20) . '_' . $member->ID;
     }
 }
 
