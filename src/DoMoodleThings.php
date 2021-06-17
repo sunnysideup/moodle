@@ -180,8 +180,8 @@ class DoMoodleThings
     {
         if($member->IsRegisteredOnMoodle()) {
             $array = $this->getUsers($member);
-            $id = (int) $array['id'] ?? 0;
-            if( $id === (int) $member->MoodleUid) {
+            $id = $array['id'] ?? 0;
+            if( (int) $id === (int) $member->MoodleUid) {
                 return true;
             } else {
                 $member->MoodleUid = 0;
