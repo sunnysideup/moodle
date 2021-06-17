@@ -164,7 +164,7 @@ class UserToMoodleUserConversionApi
 
     protected function createUserName(Member $member) : string
     {
-        $username = preg_replace("/[^A-Za-z0-9 ]/", '', $member->Email);
+        $username = preg_replace("/[^A-Za-z0-9]/", '_', $member->FirstName. ' ' . $member->Surname);
         return substr($username, 0, 20) . '_' . $member->ID;
     }
 }
