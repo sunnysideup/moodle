@@ -54,8 +54,6 @@ class CreateUser extends MoodleAction
     {
         $data = $this->getConverter()->toMoodle($relevantData, $this->createPassword);
         $data['password'] = $this->randomPassword();
-        $data['username'] = str_replace('@', '_', $relevantData->Email);
-        $data['username'] = str_replace('.', '_', $relevantData->Email);
 
         return $data;
     }

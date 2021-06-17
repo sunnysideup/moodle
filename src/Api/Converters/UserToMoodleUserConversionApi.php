@@ -166,7 +166,7 @@ class UserToMoodleUserConversionApi
     {
         $username = $member->FirstName. ' ' . $member->Surname;
         $username = preg_replace("/[^A-Za-z0-9]/", '_', $username);
-        return substr($username, 0, 20) . '_' . $member->ID;
+        return strtolower(substr($username, 0, 20) . '_' . $member->ID);
     }
 }
 
