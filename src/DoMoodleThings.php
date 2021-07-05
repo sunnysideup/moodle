@@ -6,6 +6,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Environment;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
@@ -26,6 +27,11 @@ class DoMoodleThings
     use Injectable;
     use Configurable;
     use Extensible;
+
+    public function __construct()
+    {
+        Environment::setTimeLimitMax(120);
+    }
 
     /**
      * returns SSO link for Moodle for current user or any other email address.
@@ -94,7 +100,7 @@ class DoMoodleThings
     {
         $member = $member ?: Security::getCurrentUser();
         if ($member) {
-            if ($member->IsRegisteredOnMoodle()) {
+            if ($this->IsRegisteredOnMoodleWithCheck($member)) {
                 $this->updateUser($member);
             } else {
                 $obj = Injector::inst()->get(CreateUser::class);
@@ -123,7 +129,7 @@ class DoMoodleThings
     {
         $member = $member ?: Security::getCurrentUser();
         if ($member) {
-            if ($member->IsRegisteredOnMoodle()) {
+            if ($this->IsRegisteredOnMoodleWithCheck($member)) {
                 $obj = Injector::inst()->get(UpdateUser::class);
                 $obj->runAction($member);
             } elseif ($createMemberIfDoesNotExist) {
@@ -168,5 +174,22 @@ class DoMoodleThings
         }
 
         return $outcome;
+    }
+
+    public function IsRegisteredOnMoodleWithCheck($member) : bool
+    {
+        if($member->IsRegisteredOnMoodle()) {
+            $array = $this->getUsers($member);
+            $id = $array['id'] ?? 0;
+            if( (int) $id === (int) $member->MoodleUid) {
+                return true;
+            } else {
+                $member->MoodleUid = 0;
+                $member->write();
+                return false;
+            }
+        }
+
+        return false;
     }
 }
