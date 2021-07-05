@@ -77,6 +77,6 @@ class CreateUser extends MoodleAction
             $pass[] = $alphabet[$n];
         }
 
-        return implode('', $pass) . 'aA*_'; //turn the array into a string
+        return implode('', $pass) . '1aA*_'; //turn the array into a string
     }
 }
