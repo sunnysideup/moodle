@@ -98,16 +98,41 @@ class DoMoodleThings
      */
     public function addUser(?Member $member = null): int
     {
+        return $this->addOrUpdate($member, true);
+    }
+
+    /**
+     * update the user details on Moodle.
+     * returns the MoodleUid assigned to the user.
+     *
+     * @param Member $member
+     * @param bool   $createMemberIfDoesNotExist
+     *
+     * @return int MoodleID
+     */
+    public function updateUser(?Member $member = null, ?bool $createMemberIfDoesNotExist = true): int
+    {
+        return $this->addOrUpdate($member, $createMemberIfDoesNotExist);
+    }
+
+    public function addOrUpdate(?Member $member = null, ?bool $createMemberIfDoesNotExist = true): int
+    {
         $member = $member ?: Security::getCurrentUser();
         if ($member) {
             if ($this->IsRegisteredOnMoodleWithCheck($member)) {
-                $this->updateUser($member);
+                $obj = Injector::inst()->get(UpdateUser::class);
+                $obj->runAction($member);
             } else {
-                $obj = Injector::inst()->get(CreateUser::class);
-                $id = $obj->runAction($member);
-                if ($id && (int) $id === $id) {
-                    $member->MoodleUid = $id;
-                    $member->write();
+                if($this->RecoverMemberFromEmail($member) || $this->RecoverMemberFromUsername($member)) {
+                    $obj = Injector::inst()->get(UpdateUser::class);
+                    $obj->runAction($member);
+                } elseif ($createMemberIfDoesNotExist) {
+                    $obj = Injector::inst()->get(CreateUser::class);
+                    $id = $obj->runAction($member);
+                    if ($id && (int) $id === $id) {
+                        $member->MoodleUid = $id;
+                        $member->write();
+                    }
                 }
             }
 
@@ -117,36 +142,11 @@ class DoMoodleThings
         return 0;
     }
 
-    /**
-     * update the user details on Moodle.
-     *
-     * @param Member $member
-     * @param bool   $createMemberIfDoesNotExist
-     *
-     * @return int [description]
-     */
-    public function updateUser(?Member $member = null, ?bool $createMemberIfDoesNotExist = true): int
-    {
-        $member = $member ?: Security::getCurrentUser();
-        if ($member) {
-            if ($this->IsRegisteredOnMoodleWithCheck($member)) {
-                $obj = Injector::inst()->get(UpdateUser::class);
-                $obj->runAction($member);
-            } elseif ($createMemberIfDoesNotExist) {
-                $this->addUser($member);
-            }
-
-            return (int) $member->MoodleUid;
-        }
-
-        return 0;
-    }
-
-    public function getUsers($member)
+    public function getUsers($member, ?string $moodleFieldName = 'idnumber', ?string $silverstripeFieldName = 'ID')
     {
         $obj = Injector::inst()->get(GetUsers::class);
 
-        return $obj->runAction($member);
+        return $obj->runAction($member, $moodleFieldName, $silverstripeFieldName);
     }
 
     public function getGroupFromMoodleCourseId(int $courseId): ?Group
@@ -176,17 +176,62 @@ class DoMoodleThings
         return $outcome;
     }
 
-    public function IsRegisteredOnMoodleWithCheck($member) : bool
+    /**
+     * returns true if Member has been set to corresponding Moodle Member
+     * @param  Member $member
+     * @return bool
+     */
+    public function IsRegisteredOnMoodleWithCheck(Member $member) : bool
     {
         if($member->IsRegisteredOnMoodle()) {
-            $array = $this->getUsers($member);
-            $id = $array['id'] ?? 0;
-            if( (int) $id === (int) $member->MoodleUid) {
-                return true;
-            } else {
+            return $this->IsRegisteredOnMoodleWithCheckInner($member);
+        }
+
+        return false;
+    }
+
+    /**
+     * returns true if Member has been set to corresponding Moodle Member
+     * @param  Member $member
+     * @return bool
+     */
+    public function RecoverMemberFromEmail(Member $member) : bool
+    {
+        return $this->IsRegisteredOnMoodleWithCheckInner($member, 'email', 'Email');
+    }
+
+    /**
+     * returns true if Member has been set to corresponding Moodle Member
+     * @param  Member $member
+     * @return bool
+     */
+    public function RecoverMemberFromUsername(Member $member) : bool
+    {
+        return $this->IsRegisteredOnMoodleWithCheckInner($member, 'username', 'getMoodleUsername');
+    }
+
+    public function IsRegisteredOnMoodleWithCheckInner(Member $member, ?string $moodleFieldName = 'idnumber', ?string $silverstripeFieldNameOrMethod = 'ID') : bool
+    {
+        // value from SilverStripe
+        if($member->hasMethod($silverstripeFieldNameOrMethod)) {
+            $valueFromSilvertripe = $member->$silverstripeFieldNameOrMethod();
+        } else {
+            $valueFromSilvertripe = $member->$silverstripeFieldNameOrMethod;
+        }
+        // value from Moodle
+        $array = $this->getUsers($member, $moodleFieldName, $silverstripeFieldNameOrMethod);
+        $valueFromMoodle = $array[$moodleFieldName] ?? '';
+        if( $valueFromMoodle == $valueFromSilvertripe) {
+            if(! $member->MoodleUid) {
+                $member->MoodleUid = $array['id'];
+                $member->write();
+            }
+            return true;
+        } else {
+            // reset member
+            if($member->MoodleUid) {
                 $member->MoodleUid = 0;
                 $member->write();
-                return false;
             }
         }
 

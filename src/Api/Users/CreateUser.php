@@ -23,6 +23,7 @@ class CreateUser extends MoodleAction
     protected $resultRelevantArrayKey = 'id';
 
     protected $resultVariableType = 'int';
+
     private static $converter = UserToMoodleUserConversionApi::class;
 
     public function runAction($relevantData)

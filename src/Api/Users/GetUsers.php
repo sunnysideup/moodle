@@ -17,16 +17,23 @@ class GetUsers extends MoodleAction
 
     protected $resultVariableType = 'array';
 
-    public function runAction($relevantData)
+    public function runAction($relevantData, ?string $moodleFieldName = 'idnumber', ?string $silverstripeFieldNameOrMethod = 'ID')
     {
         if ($this->validateParams($relevantData)) {
-            $params = [
-                'field' => 'idnumber',
-                'values' => [$relevantData->ID],
-            ];
-            $result = $this->runActionInner($params);
+            if($relevantData->hasMethod($silverstripeFieldNameOrMethod)) {
+                $value = $relevantData->$silverstripeFieldNameOrMethod();
+            } else {
+                $value = $relevantData->$silverstripeFieldNameOrMethod;
+            }
+            if($value) {
+                $params = [
+                    'field' => $moodleFieldName,
+                    'values' => [$value],
+                ];
+                $result = $this->runActionInner($params);
+                return $this->processResults($result);
+            }
 
-            return $this->processResults($result);
         }
 
         return false;

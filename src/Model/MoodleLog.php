@@ -6,7 +6,6 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 
-use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use Exception;
 class MoodleLog extends DataObject
@@ -95,24 +94,20 @@ class MoodleLog extends DataObject
         $fields->addFieldsToTab(
             'Root.Main',
             [
-                ReadonlyField::create('Created')
+                ReadonlyField::create('Created', 'When')
             ],
             'Action'
-        );
-        $fields->addFieldsToTab(
-            'Root.Errors',
-            [
-                LiteralField::create(
-                    'Review all errors',
-                    '<a href="/dev/tasks/Sunnysideup-Moodle-Model-MoodleLogErrorList">Review all errors in one go</a>'
-                )
-            ],
         );
         if($this->MemberID) {
             $member = $fields->dataFieldByName('MemberID')
                 ->setDescription('<a href="/admin/security/EditForm/field/Members/item/'.$this->MemberID.'/edit">'.$this->Member()->Email.'</a>');
         }
         return $fields;
+    }
+
+    public function CMSEditLink() : string
+    {
+        return '/admin/moodle/Sunnysideup-Moodle-Model-MoodleLog/EditForm/field/Sunnysideup-Moodle-Model-MoodleLog/item/'.$this->ID.'/edit';
     }
 
     protected function removeKey(array $array, string $key)

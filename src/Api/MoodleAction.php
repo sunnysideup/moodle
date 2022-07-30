@@ -4,6 +4,8 @@ namespace Sunnysideup\Moodle\Api;
 
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
+
+use SilverStripe\Dev\Debug;
 use Sunnysideup\Moodle\Model\MoodleLog;
 
 abstract class MoodleAction

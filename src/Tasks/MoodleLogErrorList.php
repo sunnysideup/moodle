@@ -27,19 +27,31 @@ class MoodleLogErrorList extends BuildTask
         echo '<h2>Error Percentage ('.$errorCount.' / '.$totalCount.') = '.round(($errorCount/$totalCount) * 100, 2).'%</h2>';
         foreach($logs as $log) {
             $log->write();
-            $email = $log->Member()->Email;
-            if(! isset($this->byEmail[$email])) {
-                $this->byEmail[$email] = [];
+            $successLater = MoodleLog::get()
+                ->filter(
+                    [
+                        'IsSuccess' => true,
+                        'MemberID' => $log->MemberID,
+                        'ID:GreaterThan' => $log->ID,
+                    ]
+                )->exists();
+            if($successLater === false) {
+                $email = $log->Member()->Email;
+                if(! isset($this->byEmail[$email])) {
+                    $this->byEmail[$email] = [];
+                }
+                $this->byEmail[$email][] = [
+                    'ErrorMessage' => $log->ErrorMessage,
+                    'Created' => $log->Created,
+                    'Link' => $log->CMSEditLink(),
+                ];
             }
-            $this->byEmail[$email][] = [
-                'ErrorMessage' => $log->ErrorMessage,
-                'Created' => $log->Created,
-            ];
         }
         foreach($this->byEmail as $email => $items) {
+            echo '<hr />';
             DB::alteration_message('<strong>'.$email.'</strong>');
             foreach($items as $item) {
-                DB::alteration_message('...  ... '.$item['Created'].': '.$item['ErrorMessage']);
+                DB::alteration_message('...  ... <a href="'.$item['Link'].'">'.$item['Created'].': '.$item['ErrorMessage'].'</a>');
             }
         }
     }

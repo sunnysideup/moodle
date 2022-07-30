@@ -3,8 +3,11 @@
 namespace Sunnysideup\Moodle\Api\Converters;
 
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Security\Member;
+
+use SilverStripe\ORM\DataObject;
 
 class UserToMoodleUserConversionApi
 {
@@ -47,7 +50,7 @@ class UserToMoodleUserConversionApi
             $returnArray[$moodleField] = $this->getValueForMoodle($member, $ssField, $type);
         }
         //fix username
-        $returnArray['username'] = $this->createUserName($member);
+        $returnArray['username'] = $member->getMoodleUsername();
         $array['customfields'] = [];
         foreach ($this->config()->get('custom_fields') as $details) {
             $ssField = $details['SilverstripeField'];
@@ -115,7 +118,8 @@ class UserToMoodleUserConversionApi
                 break;
             case 'string':
             default:
-                $val = (string) $val;
+                //important to trim here!
+                $val = trim((string) $val);
         }
 
         return $val;
@@ -162,12 +166,6 @@ class UserToMoodleUserConversionApi
         return 0;
     }
 
-    protected function createUserName(Member $member) : string
-    {
-        $username = $member->FirstName. ' ' . $member->Surname;
-        $username = preg_replace("/[^A-Za-z0-9]/", '_', $username);
-        return strtolower(substr($username, 0, 20) . '_' . $member->ID);
-    }
 }
 
 /*
