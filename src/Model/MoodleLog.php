@@ -8,12 +8,18 @@ use SilverStripe\Security\Security;
 
 use SilverStripe\Forms\ReadonlyField;
 use Exception;
+
+use SilverStripe\Control\Email\Email;
+use SilverStripe\Control\Director;
+
+use SilverStripe\Core\Config\Config;
 class MoodleLog extends DataObject
 {
     private static $db = [
         'Action' => 'Varchar',
         'Params' => 'Text',
         'IsSuccess' => 'Boolean',
+        'ErrorEmailSent' => 'Boolean',
         'Result' => 'Text',
         'Error' => 'Text',
         'ErrorMessage' => 'Varchar',
@@ -85,7 +91,25 @@ class MoodleLog extends DataObject
             print_r($this->Error);
             //do nothing
         }
+    }
 
+    public function onAfterWrite()
+    {
+        parent::onAfterWrite();
+        if($this->IsSuccess === false) {
+            if((bool) $this->ErrorEmailSent === (bool) false) {
+                $adminEmail = Config::inst()->get(Email::class, 'admin_email');
+                $result = (new Email(
+                    $adminEmail,
+                    $adminEmail,
+                    'Moodle Connection Error',
+                    'There was an error in connection with Moodle,
+                    see: <a href="'.Director::absoluteURL($this->CMSEditLink()).'">'.Director::absoluteURL($this->CMSEditLink()).'</a>'
+                ))->send();
+                $this->ErrorEmailSent =$result;
+                $this->write();
+            }
+        }
     }
 
     public function getCMSFields()
