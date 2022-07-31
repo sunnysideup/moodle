@@ -11,7 +11,7 @@ use Sunnysideup\Moodle\Model\MoodleLog;
 
 class MoodleLogErrorList extends BuildTask
 {
-    protected $title = 'Check for Moodle Errors and list them';
+    protected $title = 'Check for Moodle Errors and list them (use ?all=1 to show all)';
 
     protected $description = 'Run through all the errors and summarise per member in reverse chronological order.';
 
@@ -35,7 +35,7 @@ class MoodleLogErrorList extends BuildTask
                         'ID:GreaterThan' => $log->ID,
                     ]
                 )->exists();
-            if($successLater === false) {
+            if($successLater === false || $_GET['all']) {
                 $email = $log->Member()->Email;
                 if(! isset($this->byEmail[$email])) {
                     $this->byEmail[$email] = [];
