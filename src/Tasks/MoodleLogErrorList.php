@@ -35,7 +35,7 @@ class MoodleLogErrorList extends BuildTask
                         'ID:GreaterThan' => $log->ID,
                     ]
                 )->exists();
-            if($successLater === false || $_GET['all']) {
+            if($successLater === false || ! empty($_GET['all'])) {
                 $email = $log->Member()->Email;
                 if(! isset($this->byEmail[$email])) {
                     $this->byEmail[$email] = [];
