@@ -99,14 +99,14 @@ class MoodleLog extends DataObject
         if($this->IsSuccess === false) {
             if((bool) $this->ErrorEmailSent === (bool) false) {
                 $adminEmail = Config::inst()->get(Email::class, 'admin_email');
-                $result = (new Email(
+                (new Email(
                     $adminEmail,
                     $adminEmail,
                     'Moodle Connection Error',
                     'There was an error in connection with Moodle,
                     see: <a href="'.Director::absoluteURL($this->CMSEditLink()).'">'.Director::absoluteURL($this->CMSEditLink()).'</a>'
                 ))->send();
-                $this->ErrorEmailSent =$result;
+                $this->ErrorEmailSent = true;
                 $this->write();
             }
         }
