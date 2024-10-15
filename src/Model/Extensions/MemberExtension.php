@@ -84,6 +84,14 @@ class MemberExtension extends DataExtension
                     $fields->dataFieldByName('MoodleUid')->setReadOnly(true),
                 ],
             );  
+        } else {
+            $fields->removeByName(
+                [
+                    'IsRegisteredOnMoodleNice',
+                    'MoodleUsername',
+                    'MoodleUid',
+                ]
+            )
         }
 
         return $fields;
