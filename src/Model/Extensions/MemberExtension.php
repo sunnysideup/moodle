@@ -66,23 +66,25 @@ class MemberExtension extends DataExtension
             $obj = Injector::inst()->get(DoMoodleThings::class);
             $obj->addUser($this->getOwner());
         }
-        $fields->addFieldsToTab(
-            'Root.Moodle',
-            [
-                ReadonlyField::create(
-                    'IsRegisteredOnMoodleNice',
-                    'Is Registered On Moodle',
-                    $this->getOwner()->IsRegisteredOnMoodle() ? 'YES' : 'NO'
-                ),
-                ReadonlyField::create(
-                    'MoodleUsername',
-                    'Moodle Username'
-                )
-                    ->setDescription('May not be set, but that is how we would register it.'),
+        if($this->getOwner()->exists()) {
+            $fields->addFieldsToTab(
+                'Root.Moodle',
+                [
+                    ReadonlyField::create(
+                        'IsRegisteredOnMoodleNice',
+                        'Is Registered On Moodle',
+                        $this->getOwner()->IsRegisteredOnMoodle() ? 'YES' : 'NO'
+                    ),
+                    ReadonlyField::create(
+                        'MoodleUsername',
+                        'Moodle Username'
+                    )
+                        ->setDescription('May not be set, but that is how we would register it.'),
 
-                $fields->dataFieldByName('MoodleUid')->setReadOnly(true),
-            ],
-        );
+                    $fields->dataFieldByName('MoodleUid')->setReadOnly(true),
+                ],
+            );  
+        }
 
         return $fields;
     }
