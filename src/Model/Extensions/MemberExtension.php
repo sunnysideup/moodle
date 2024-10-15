@@ -91,7 +91,7 @@ class MemberExtension extends DataExtension
                     'MoodleUsername',
                     'MoodleUid',
                 ]
-                );
+            );
         }
 
         return $fields;
