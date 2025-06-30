@@ -13,6 +13,7 @@ use SilverStripe\Control\Email\Email;
 use SilverStripe\Control\Director;
 
 use SilverStripe\Core\Config\Config;
+
 class MoodleLog extends DataObject
 {
     private static $db = [
@@ -57,7 +58,7 @@ class MoodleLog extends DataObject
     {
         parent::onBeforeWrite();
         // add member if no member present
-        if(! $this->MemberID) {
+        if (! $this->MemberID) {
             $member = Security::getCurrentUser();
             if ($member && $member->exists()) {
                 $this->MemberID = $member->ID;
@@ -66,28 +67,27 @@ class MoodleLog extends DataObject
 
         // remove passwords
         try {
-            if($this->Params) {
-                if(strpos($this->Params, 'password')) {
+            if ($this->Params) {
+                if (strpos($this->Params, 'password')) {
                     $array = unserialize($this->Params);
                     $array = $this->removeKey($array, 'Password');
                     $this->Params = serialize($array);
                 }
             }
-
         } catch (Exception $e) {
-            echo '<h2>error with MoodleLog #'.$this->ID.'</h2>';
+            echo '<h2>error with MoodleLog #' . $this->ID . '</h2>';
             print_r($this->Params);
         }
 
         // retrieve actual error
         try {
-            if($this->Error && ! $this->ErrorMessage) {
+            if ($this->Error && ! $this->ErrorMessage) {
                 $string = unserialize($this->Error);
                 $debuginfoArray = json_decode($string, true);
                 $this->ErrorMessage = $debuginfoArray['debuginfo'] ?? '';
             }
         } catch (Exception $e) {
-            echo '<h2>error with MoodleLog #'.$this->ID.'</h2>';
+            echo '<h2>error with MoodleLog #' . $this->ID . '</h2>';
             print_r($this->Error);
             //do nothing
         }
@@ -96,15 +96,16 @@ class MoodleLog extends DataObject
     public function onAfterWrite()
     {
         parent::onAfterWrite();
-        if($this->IsSuccess === false) {
-            if((bool) $this->ErrorEmailSent === (bool) false) {
+        $this->DeleteOldData();
+        if ($this->IsSuccess === false) {
+            if ((bool) $this->ErrorEmailSent === (bool) false) {
                 $adminEmail = Config::inst()->get(Email::class, 'admin_email');
                 Email::create(
                     $adminEmail,
                     $adminEmail,
                     'Moodle Connection Error',
                     'There was an error in connection with Moodle,
-                    see: <a href="'.Director::absoluteURL($this->CMSEditLink()).'">'.Director::absoluteURL($this->CMSEditLink()).'</a>'
+                    see: <a href="' . Director::absoluteURL($this->CMSEditLink()) . '">' . Director::absoluteURL($this->CMSEditLink()) . '</a>'
                 )->send();
                 $this->ErrorEmailSent = true;
                 $this->write();
@@ -122,21 +123,21 @@ class MoodleLog extends DataObject
             ],
             'Action'
         );
-        if($this->MemberID) {
+        if ($this->MemberID) {
             $member = $fields->dataFieldByName('MemberID')
-                ->setDescription('<a href="/admin/security/EditForm/field/Members/item/'.$this->MemberID.'/edit">'.$this->Member()->Email.'</a>');
+                ->setDescription('<a href="/admin/security/EditForm/field/Members/item/' . $this->MemberID . '/edit">' . $this->Member()->Email . '</a>');
         }
         return $fields;
     }
 
-    public function CMSEditLink() : string
+    public function CMSEditLink(): string
     {
-        return '/admin/moodle/Sunnysideup-Moodle-Model-MoodleLog/EditForm/field/Sunnysideup-Moodle-Model-MoodleLog/item/'.$this->ID.'/edit';
+        return '/admin/moodle/Sunnysideup-Moodle-Model-MoodleLog/EditForm/field/Sunnysideup-Moodle-Model-MoodleLog/item/' . $this->ID . '/edit';
     }
 
     protected function removeKey(array $array, string $key)
     {
-        if(is_array($array)) {
+        if (is_array($array)) {
             if (array_key_exists($key, $array)) {
                 unset($array[$key]);
             }
@@ -145,8 +146,17 @@ class MoodleLog extends DataObject
                 if (is_array($element)) {
                     $this->removeKey($element, $key);
                 }
-
             }
+        }
+    }
+
+
+    public function DeleteOldData()
+    {
+        $cutOffDate = date('Y-m-d H:i:s', strtotime('-1 year'));
+        $oldLogs = self::get()->filter('Created:LessThan', $cutOffDate)->limit(200);
+        foreach ($oldLogs as $log) {
+            $log->delete();
         }
     }
 }
