@@ -97,7 +97,7 @@ class MoodleLog extends DataObject
     {
         parent::onAfterWrite();
         $this->DeleteOldData();
-        if ($this->IsSuccess === false) {
+        if ((bool) $this->IsSuccess === false) {
             if ((bool) $this->ErrorEmailSent === (bool) false) {
                 $adminEmail = Config::inst()->get(Email::class, 'admin_email');
                 Email::create(
