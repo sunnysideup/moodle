@@ -97,7 +97,6 @@ class MoodleWebservice {
 			MoodleWebservice::$errors [] = curl_error($ch);
 			return null;
 		}
-		curl_close($ch);
 
 		$authjson = json_decode($result);
 
@@ -480,8 +479,6 @@ class MoodleWebservice {
 		$this->info = curl_getinfo($curl);
 		$this->error = curl_error($curl);
 
-
-		curl_close($curl);
 
 		if (empty($this->error)) {
 			return $ret;
