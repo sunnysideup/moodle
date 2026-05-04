@@ -8,15 +8,12 @@ use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Environment;
 use SilverStripe\ORM\DataList;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use Sunnysideup\Moodle\Api\Courses\GetCourses;
 use Sunnysideup\Moodle\Api\Enrol\EnrolUser;
 use Sunnysideup\Moodle\Api\Users\CreateUser;
-use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromEmail;
-use Sunnysideup\Moodle\Api\Users\GetLoginUrlFromIdNumber;
 use Sunnysideup\Moodle\Api\Users\GetUsers;
 use Sunnysideup\Moodle\Api\Users\UpdateUser;
 use Sunnysideup\Moodle\Api\Users\GetSsoLink;
@@ -74,11 +71,12 @@ class DoMoodleThings
         $courses = $this->getCourses();
         foreach ($courses as $course) {
             $group = GroupExtension::create_group_from_moodle_data($course);
-            if ($group) {
+            if ($group instanceof Group) {
                 unset($existingGpsArray[$group->ID]);
             }
         }
-        if (count($existingGpsArray)) {
+
+        if ($existingGpsArray !== []) {
             $obseleteGroups = Group::get()->filter(['ID' => $existingGpsArray]);
             foreach ($obseleteGroups as $group) {
                 if ($group->MoodleUid) {
@@ -122,17 +120,15 @@ class DoMoodleThings
             if ($this->IsRegisteredOnMoodleWithCheck($member)) {
                 $obj = Injector::inst()->get(UpdateUser::class);
                 $obj->runAction($member);
-            } else {
-                if($this->RecoverMemberFromEmail($member) || $this->RecoverMemberFromUsername($member)) {
-                    $obj = Injector::inst()->get(UpdateUser::class);
-                    $obj->runAction($member);
-                } elseif ($createMemberIfDoesNotExist) {
-                    $obj = Injector::inst()->get(CreateUser::class);
-                    $id = $obj->runAction($member);
-                    if ($id && (int) $id === $id) {
-                        $member->MoodleUid = $id;
-                        $member->write();
-                    }
+            } elseif ($this->RecoverMemberFromEmail($member) || $this->RecoverMemberFromUsername($member)) {
+                $obj = Injector::inst()->get(UpdateUser::class);
+                $obj->runAction($member);
+            } elseif ($createMemberIfDoesNotExist) {
+                $obj = Injector::inst()->get(CreateUser::class);
+                $id = $obj->runAction($member);
+                if ($id && (int) $id === $id) {
+                    $member->MoodleUid = $id;
+                    $member->write();
                 }
             }
 
@@ -151,7 +147,7 @@ class DoMoodleThings
 
     public function getGroupFromMoodleCourseId(int $courseId): ?Group
     {
-        return DataObject::get_one(Group::class, ['MoodleUid' => $courseId]);
+        return Group::get()->setUseCache(true)->filter(['MoodleUid' => $courseId])->first();
     }
 
     public function enrolUserOnCourse(Group $group, ?Member $member = null): bool
@@ -170,6 +166,7 @@ class DoMoodleThings
                     }
                 }
             }
+
             $this->updateUser($member);
         }
 
@@ -218,21 +215,21 @@ class DoMoodleThings
         } else {
             $valueFromSilvertripe = $member->$silverstripeFieldNameOrMethod;
         }
+
         // value from Moodle
         $array = $this->getUsers($member, $moodleFieldName, $silverstripeFieldNameOrMethod);
         $valueFromMoodle = $array[$moodleFieldName] ?? '';
-        if( $valueFromMoodle == $valueFromSilvertripe) {
+        if ($valueFromMoodle == $valueFromSilvertripe) {
             if(! $member->MoodleUid) {
                 $member->MoodleUid = $array['id'];
                 $member->write();
             }
+
             return true;
-        } else {
+        } elseif ($member->MoodleUid) {
             // reset member
-            if($member->MoodleUid) {
-                $member->MoodleUid = 0;
-                $member->write();
-            }
+            $member->MoodleUid = 0;
+            $member->write();
         }
 
         return false;

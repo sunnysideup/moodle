@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\Moodle\Api\Users;
 
+use Override;
 use SilverStripe\Security\Member;
 
 class UpdateUser extends CreateUser
@@ -18,6 +19,7 @@ class UpdateUser extends CreateUser
 
     protected $resultVariableType = 'int';
 
+    #[Override]
     public function runAction($relevantData)
     {
         if ($this->validateParams($relevantData)) {
@@ -41,6 +43,7 @@ class UpdateUser extends CreateUser
         return false;
     }
 
+    #[Override]
     protected function createData(Member $relevantData): array
     {
         $data = $this->getConverter()->toMoodle($relevantData, $this->createPassword);
@@ -49,12 +52,14 @@ class UpdateUser extends CreateUser
         return $data;
     }
 
+    #[Override]
     protected function validateParams($relevantData): bool
     {
         if (parent::validateParams($relevantData)) {
             if ($relevantData->MoodleUid) {
                 return true;
             }
+
             $this->recordValidateParamsError('This user does not have a MoodleUid.');
 
             return false;

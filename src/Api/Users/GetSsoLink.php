@@ -23,11 +23,12 @@ class GetSsoLink extends MoodleAction
 
     public function setFilterType(string $type) : self
     {
-        if( in_array($type, self::FILTER_TYPES_ALLOWED)) {
+        if( in_array($type, self::FILTER_TYPES_ALLOWED, true)) {
             $this->filterType = $type;
         } else {
             user_error('Type must be one of: '.print_r(self::FILTER_TYPES_ALLOWED, 1).', "'.$type.'" provided.');
         }
+
         return $this;
     }
 
@@ -52,9 +53,11 @@ class GetSsoLink extends MoodleAction
 
             return false;
         }
+
         if ($relevantData->Email && filter_var($relevantData->Email, FILTER_VALIDATE_EMAIL)) {
             return true;
         }
+
         $this->recordValidateParamsError('We expect an email here, you provided ' . $relevantData->Email);
 
         return false;
@@ -62,13 +65,9 @@ class GetSsoLink extends MoodleAction
 
     protected function getFilterStatement($relevantData) : array
     {
-        switch ($this->filterType) {
-            case 'idnumber':
-                return ['idnumber' => $relevantData->ID,];
-                break;
-            case 'email':
-            default:
-                return ['email' => $relevantData->Email,];
-        }
+        return match ($this->filterType) {
+            'idnumber' => ['idnumber' => $relevantData->ID,],
+            default => ['email' => $relevantData->Email,],
+        };
     }
 }

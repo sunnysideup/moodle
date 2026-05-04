@@ -1,0 +1,335 @@
+diff --git a/composer.json b/composer.json
+index 65bd994..cdd4d20 100644
+--- a/composer.json
++++ b/composer.json
+@@ -9,7 +9,7 @@
+   ],
+   "license": "BSD-3-Clause",
+   "require": {
+-    "silverstripe/framework": "^4.0 || ^5.0",
++    "silverstripe/framework": "^6.0",
+     "llagerlof/moodlerest": "^2.4"
+   },
+   "autoload": {
+diff --git a/src/Api/Converters/UserToMoodleUserConversionApi.php b/src/Api/Converters/UserToMoodleUserConversionApi.php
+index 45f78b9..8d6c5bb 100644
+--- a/src/Api/Converters/UserToMoodleUserConversionApi.php
++++ b/src/Api/Converters/UserToMoodleUserConversionApi.php
+@@ -7,8 +7,6 @@ use SilverStripe\Core\Injector\Injector;
+ use SilverStripe\Core\Injector\Injectable;
+ use SilverStripe\Security\Member;
+ 
+-use SilverStripe\ORM\DataObject;
+-
+ class UserToMoodleUserConversionApi
+ {
+     use Configurable;
+@@ -109,6 +107,7 @@ class UserToMoodleUserConversionApi
+         } else {
+             $val = $obj->{$ssField};
+         }
++
+         $val = match (strtolower($type)) {
+             'int', 'integer' => (int) $val,
+             'bool', 'boolean' => $val ? 1 : 0,
+@@ -153,7 +152,7 @@ class UserToMoodleUserConversionApi
+             $obj = $obj->{$method}();
+         }
+ 
+-        $obj = DataObject::get_one($obj->ClassName, [$field => $value]);
++        $obj = $obj->ClassName::get()->setUseCache(true)->filter([$field => $value])->first();
+         if ($obj) {
+             return (int) $obj->ID;
+         }
+diff --git a/src/Api/MoodleResponse.php b/src/Api/MoodleResponse.php
+index 30065ac..75a9160 100644
+--- a/src/Api/MoodleResponse.php
++++ b/src/Api/MoodleResponse.php
+@@ -2,7 +2,7 @@
+ 
+ namespace Sunnysideup\Moodle\Api;
+ 
+-use SilverStripe\ORM\ArrayList;
++use SilverStripe\Model\List\ArrayList;
+ use SilverStripe\ORM\DataList;
+ use SilverStripe\ORM\DataObject;
+ 
+diff --git a/src/Api/Users/UpdateUser.php b/src/Api/Users/UpdateUser.php
+index 69a49ab..4db8ff4 100644
+--- a/src/Api/Users/UpdateUser.php
++++ b/src/Api/Users/UpdateUser.php
+@@ -2,6 +2,7 @@
+ 
+ namespace Sunnysideup\Moodle\Api\Users;
+ 
++use Override;
+ use SilverStripe\Security\Member;
+ 
+ class UpdateUser extends CreateUser
+@@ -18,6 +19,7 @@ class UpdateUser extends CreateUser
+ 
+     protected $resultVariableType = 'int';
+ 
++    #[Override]
+     public function runAction($relevantData)
+     {
+         if ($this->validateParams($relevantData)) {
+@@ -41,6 +43,7 @@ class UpdateUser extends CreateUser
+         return false;
+     }
+ 
++    #[Override]
+     protected function createData(Member $relevantData): array
+     {
+         $data = $this->getConverter()->toMoodle($relevantData, $this->createPassword);
+@@ -49,6 +52,7 @@ class UpdateUser extends CreateUser
+         return $data;
+     }
+ 
++    #[Override]
+     protected function validateParams($relevantData): bool
+     {
+         if (parent::validateParams($relevantData)) {
+diff --git a/src/DoMoodleThings.php b/src/DoMoodleThings.php
+index 39065c2..8d8fb63 100644
+--- a/src/DoMoodleThings.php
++++ b/src/DoMoodleThings.php
+@@ -8,7 +8,6 @@ use SilverStripe\Core\Injector\Injectable;
+ use SilverStripe\Core\Injector\Injector;
+ use SilverStripe\Core\Environment;
+ use SilverStripe\ORM\DataList;
+-use SilverStripe\ORM\DataObject;
+ use SilverStripe\Security\Group;
+ use SilverStripe\Security\Member;
+ use SilverStripe\Security\Security;
+@@ -148,7 +147,7 @@ class DoMoodleThings
+ 
+     public function getGroupFromMoodleCourseId(int $courseId): ?Group
+     {
+-        return DataObject::get_one(Group::class, ['MoodleUid' => $courseId]);
++        return Group::get()->setUseCache(true)->filter(['MoodleUid' => $courseId])->first();
+     }
+ 
+     public function enrolUserOnCourse(Group $group, ?Member $member = null): bool
+diff --git a/src/Model/Extensions/GroupExtension.php b/src/Model/Extensions/GroupExtension.php
+index dddca28..75dcbd9 100644
+--- a/src/Model/Extensions/GroupExtension.php
++++ b/src/Model/Extensions/GroupExtension.php
+@@ -7,37 +7,21 @@ use SilverStripe\Forms\CheckboxField;
+ use SilverStripe\Forms\FieldList;
+ use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
+ use SilverStripe\Forms\ReadonlyField;
+-use SilverStripe\ORM\DataObject;
+ use SilverStripe\Security\Group;
+ use SilverStripe\Security\Member;
+ use SilverStripe\Security\Security;
+ 
+ class GroupExtension extends Extension
+ {
+-    /**
+-     * @var string
+-     */
+-    private const MOODLE_PARENT_GROUP_CODE = 'MOODLES';
++    private const string MOODLE_PARENT_GROUP_CODE = 'MOODLES';
+ 
+-    /**
+-     * @var string
+-     */
+-    private const MOODLE_PARENT_GROUP_NAME = 'Moodle Groups';
++    private const string MOODLE_PARENT_GROUP_NAME = 'Moodle Groups';
+ 
+-    /**
+-     * @var string
+-     */
+-    private const MOODLE_PARENT_GROUP_EXPLANATION = 'This group holds all the Moodle Courses';
++    private const string MOODLE_PARENT_GROUP_EXPLANATION = 'This group holds all the Moodle Courses';
+ 
+-    /**
+-     * @var string
+-     */
+-    private const MOODLE_NAME_POST_FIX = '- COURSE';
++    private const string MOODLE_NAME_POST_FIX = '- COURSE';
+ 
+-    /**
+-     * @var string
+-     */
+-    private const MOODLE_GROUP_EXPLANATION = 'This group shows the members that are part of a Moodle Course';
++    private const string MOODLE_GROUP_EXPLANATION = 'This group shows the members that are part of a Moodle Course';
+ 
+     private static $db = [
+         'MoodleUid' => 'Int',
+@@ -102,12 +86,11 @@ class GroupExtension extends Extension
+ 
+     public function onBeforeWrite()
+     {
+-        parent::onBeforeWrite();
+         if ($this->getOwner()->MoodleUid) {
+             $holderGroup = $this->getOwner()->findOrCreateMoodleHolderGroup();
+             $this->getOwner()->Locked = true;
+             $this->getOwner()->ParentID = $holderGroup->ID;
+-            if (! strpos($this->getOwner()->Title, self::MOODLE_NAME_POST_FIX)) {
++            if (! strpos((string) $this->getOwner()->Title, self::MOODLE_NAME_POST_FIX)) {
+                 $this->getOwner()->Title .= ' ' . self::MOODLE_NAME_POST_FIX;
+             }
+ 
+@@ -120,7 +103,7 @@ class GroupExtension extends Extension
+         $id = $moodleData['id'] ?? 0;
+         if ($id) {
+             $filter = ['MoodleUid' => $id];
+-            $group = DataObject::get_one(Group::class, $filter);
++            $group = Group::get()->setUseCache(true)->filter($filter)->first();
+             if (! $group) {
+                 $group = Group::create($filter);
+             }
+@@ -182,7 +165,7 @@ class GroupExtension extends Extension
+     public function findOrCreateMoodleHolderGroup(): Group
+     {
+         $filter = ['Code' => self::MOODLE_PARENT_GROUP_CODE];
+-        $group = DataObject::get_one(Group::class, $filter);
++        $group = Group::get()->setUseCache(true)->filter($filter)->first();
+         if (! $group) {
+             $group = Group::create($filter);
+         }
+@@ -193,7 +176,7 @@ class GroupExtension extends Extension
+         $group->Description = self::MOODLE_PARENT_GROUP_EXPLANATION;
+         $group->write();
+ 
+-        return DataObject::get_one(Group::class, $filter);
++        return Group::get()->setUseCache(true)->filter($filter)->first();
+     }
+ 
+     public function StartDateNice()
+diff --git a/src/Model/MoodleLog.php b/src/Model/MoodleLog.php
+index 01b7eb7..8e49bd5 100644
+--- a/src/Model/MoodleLog.php
++++ b/src/Model/MoodleLog.php
+@@ -2,6 +2,7 @@
+ 
+ namespace Sunnysideup\Moodle\Model;
+ 
++use Override;
+ use SilverStripe\ORM\DataObject;
+ use SilverStripe\Security\Member;
+ use SilverStripe\Security\Security;
+@@ -45,16 +46,19 @@ class MoodleLog extends DataObject
+ 
+     private static $table_name = 'MoodleLog';
+ 
++    #[Override]
+     public function canEdit($member = null)
+     {
+         return false;
+     }
+ 
++    #[Override]
+     public function canDelete($member = null)
+     {
+         return false;
+     }
+ 
++    #[Override]
+     protected function onBeforeWrite()
+     {
+         parent::onBeforeWrite();
+@@ -92,6 +96,7 @@ class MoodleLog extends DataObject
+         }
+     }
+ 
++    #[Override]
+     protected function onAfterWrite()
+     {
+         parent::onAfterWrite();
+@@ -110,6 +115,7 @@ class MoodleLog extends DataObject
+         }
+     }
+ 
++    #[Override]
+     public function getCMSFields()
+     {
+         $fields = parent::getCMSFields();
+@@ -128,6 +134,7 @@ class MoodleLog extends DataObject
+         return $fields;
+     }
+ 
++    #[Override]
+     public function CMSEditLink(): string
+     {
+         return '/admin/moodle/Sunnysideup-Moodle-Model-MoodleLog/EditForm/field/Sunnysideup-Moodle-Model-MoodleLog/item/' . $this->ID . '/edit';
+diff --git a/src/Tasks/MoodleLogErrorList.php b/src/Tasks/MoodleLogErrorList.php
+index 1ca98ac..3df34b6 100644
+--- a/src/Tasks/MoodleLogErrorList.php
++++ b/src/Tasks/MoodleLogErrorList.php
+@@ -2,17 +2,21 @@
+ 
+ namespace Sunnysideup\Moodle\Model;
+ 
++use Symfony\Component\Console\Input\InputInterface;
++use Symfony\Component\Console\Input\InputOption;
++use SilverStripe\PolyExecution\PolyOutput;
++use Symfony\Component\Console\Command\Command;
+ use SilverStripe\Dev\BuildTask;
+ 
+-use SilverStripe\ORM\DB;
+-
+ use Sunnysideup\Moodle\Model\MoodleLog;
+ 
+ class MoodleLogErrorList extends BuildTask
+ {
+-    protected $title = 'Check for Moodle Errors and list them (use ?all=1 to show all)';
++    protected static string $commandName = 'moodle-log-error-list';
++
++    protected string $title = 'Check for Moodle Errors and list them (use --all to show all)';
+ 
+-    protected $description = 'Run through all the errors and summarise per member in reverse chronological order.';
++    protected static string $description = 'Run through all the errors and summarise per member in reverse chronological order.';
+ 
+     /**
+      * @config
+@@ -21,12 +25,12 @@ class MoodleLogErrorList extends BuildTask
+ 
+     protected $byEmail = [];
+ 
+-    public function run($request)
++    protected function execute(InputInterface $input, PolyOutput $output): int
+     {
+         $totalCount = MoodleLog::get()->count();
+         $logs = MoodleLog::get()->filter(['IsSuccess' => false]);
+         $errorCount = $logs->count();
+-        echo '<h2>Error Percentage (' . $errorCount . ' / ' . $totalCount . ') = ' . round(($errorCount / $totalCount) * 100, 2) . '%</h2>';
++        $output->writeForHtml('<h2>Error Percentage (' . $errorCount . ' / ' . $totalCount . ') = ' . round(($errorCount / $totalCount) * 100, 2) . '%</h2>');
+         foreach ($logs as $log) {
+             $log->write();
+             $successLater = MoodleLog::get()
+@@ -37,7 +41,7 @@ class MoodleLogErrorList extends BuildTask
+                         'ID:GreaterThan' => $log->ID,
+                     ]
+                 )->exists();
+-            if ((bool) $successLater === false || ! empty($_GET['all'])) {
++            if ((bool) $successLater === false || $input->getOption('all')) {
+                 $email = $log->Member()->Email;
+                 if (! isset($this->byEmail[$email])) {
+                     $this->byEmail[$email] = [];
+@@ -52,11 +56,20 @@ class MoodleLogErrorList extends BuildTask
+         }
+ 
+         foreach ($this->byEmail as $email => $items) {
+-            echo '<hr />';
+-            DB::alteration_message('<strong>' . $email . '</strong>');
++            $output->writeForHtml('<hr />');
++            $output->writeForHtml('<strong>' . $email . '</strong>');
+             foreach ($items as $item) {
+-                DB::alteration_message('...  ... <a href="' . $item['Link'] . '">' . $item['Created'] . ': ' . $item['ErrorMessage'] . '</a>');
++                $output->writeForHtml('...  ... <a href="' . $item['Link'] . '">' . $item['Created'] . ': ' . $item['ErrorMessage'] . '</a>');
+             }
+         }
++
++        return Command::SUCCESS;
++    }
++
++    public function getOptions(): array
++    {
++        return [
++            new InputOption('all', 'a', InputOption::VALUE_NONE, 'Show all errors including those with later successes'),
++        ];
+     }
+ }

@@ -32,9 +32,13 @@ class MoodleWebservice
     protected const WEB_SERVER_LOCATION = 'webservice/rest/server.php';
 
     public $proxy = false;
+
     public $response = [];
+
     public $header = [];
+
     public $info;
+
     public $error;
 
     protected static $altMoodleRest;
@@ -52,10 +56,15 @@ class MoodleWebservice
     private $count = 0;
 
     private static $authentication = [];
+
     private $options;
+
     private $proxy_host = '';
+
     private $proxy_auth = '';
+
     private $proxy_type = '';
+
     private $cookie = false;            // 'curl_cookie.txt' etc.
 
     /**
@@ -64,10 +73,8 @@ class MoodleWebservice
      */
     protected function __construct()
     {
-        if (Controller::curr()->getRequest()->getVar('debug')) {
-            if (Director::isDev() || Permission::check('ADMIN')) {
-                $this->debug = true;
-            }
+        if (Controller::curr()->getRequest()->getVar('debug') && (Director::isDev() || Permission::check('ADMIN'))) {
+            $this->debug = true;
         }
     }
 
@@ -101,7 +108,7 @@ class MoodleWebservice
         $authentication = self::config()->get('authentication');
 
         if (isset($authentication['statictoken']) && $authentication['statictoken']) {
-            MoodleWebservice::$instance = new MoodleWebservice();
+            MoodleWebservice::$instance = MoodleWebservice::create();
             MoodleWebservice::$token = $authentication['statictoken'];
 
             return MoodleWebservice::$instance;
@@ -152,6 +159,7 @@ class MoodleWebservice
 
             return null;
         }
+
         curl_close($ch);
 
         $authjson = json_decode($result);
@@ -163,9 +171,10 @@ class MoodleWebservice
 
                 return null;
             }
+
             // success!
             if (property_exists($authjson, 'token') && null !== $authjson->token) {
-                MoodleWebservice::$instance = new MoodleWebservice();
+                MoodleWebservice::$instance = MoodleWebservice::create();
                 MoodleWebservice::$token = $authjson->token;
 
                 return MoodleWebservice::$instance;
@@ -198,9 +207,11 @@ class MoodleWebservice
         if (Director::isTest()) {
             return $urltype['locationTest'];
         }
+
         if (Director::isDev()) {
             return $urltype['locationDev'];
         }
+
         if (Director::isLive()) {
             return $urltype['locationLive'];
         }
@@ -227,6 +238,7 @@ class MoodleWebservice
         if ('xml' !== MoodleWebservice::$restformat) {
             $url .= '&moodlewsrestformat=' . MoodleWebservice::$restformat;
         }
+
         if (isset($_GET['debug']) && Director::isDev()) {
             echo $url . '<hr/>';
             print_r($params);
@@ -237,18 +249,23 @@ class MoodleWebservice
         if ('POST' === $method) {
             return new MoodleResponse($this->post($url, $params, $options), $this->error);
         }
+
         if ('GET' === $method) {
             return new MoodleResponse($this->get($url, $params, $options), $this->error);
         }
+
         if ('PUT' === $method) {
             return new MoodleResponse($this->put($url, $params, $options), $this->error);
         }
+
         if ('DELETE' === $method) {
             return new MoodleResponse($this->delete($url, $options), $this->error);
         }
+
         if ('TRACE' === $method) {
             return new MoodleResponse($this->trace($url, $options), $this->error);
         }
+
         if ('OPTIONS' === $method) {
             return new MoodleResponse($this->options($url, $options), $this->error);
         }
@@ -288,13 +305,11 @@ class MoodleWebservice
      */
     public function resetcookie()
     {
-        if (! empty($this->cookie)) {
-            if (is_file($this->cookie)) {
-                $fp = fopen($this->cookie, 'w');
-                if (! empty($fp)) {
-                    fwrite($fp, '');
-                    fclose($fp);
-                }
+        if (!empty($this->cookie) && is_file($this->cookie)) {
+            $fp = fopen($this->cookie, 'w');
+            if (! empty($fp)) {
+                fwrite($fp, '');
+                fclose($fp);
             }
         }
     }
@@ -308,9 +323,10 @@ class MoodleWebservice
     {
         if (is_array($options)) {
             foreach ($options as $name => $val) {
-                if (false === stripos($name, 'CURLOPT_')) {
+                if (false === stripos((string) $name, 'CURLOPT_')) {
                     $name = strtoupper('CURLOPT_' . $name);
                 }
+
                 $this->options[$name] = $val;
             }
         }
@@ -413,6 +429,7 @@ class MoodleWebservice
                 $this->config()->get('restformat')
             );
         }
+
         self::$altMoodleRest->setDebug($this->debug);
         self::$altMoodleRest->setPrintOnRequest($this->debug);
 
@@ -438,18 +455,22 @@ class MoodleWebservice
             foreach (array_keys($url) as $n) {
                 $options[$n] = $url[$n];
             }
+
             $handles[$i] = curl_init($url['url']);
             $this->apply_opt($handles[$i], $options);
             curl_multi_add_handle($main, $handles[$i]);
         }
+
         $running = 0;
         do {
             curl_multi_exec($main, $running);
         } while ($running > 0);
+
         for ($i = 0; $i < $count; ++$i) {
             $results[] = empty($options['CURLOPT_RETURNTRANSFER']) ? curl_multi_getcontent($handles[$i]) : true;
             curl_multi_remove_handle($main, $handles[$i]);
         }
+
         curl_multi_close($main);
 
         return $results;
@@ -475,6 +496,7 @@ class MoodleWebservice
             $options['CURLOPT_SSL_VERIFYHOST'] = '2';
             $options['CURLOPT_SSL_VERIFYPEER'] = '0';
         }
+
         if (Environment::getEnv('SS_OUTBOUND_PROXY') && Environment::getEnv('SS_OUTBOUND_PROXY_PORT')) {
             $options['CURLOPT_PROXY'] = Environment::getEnv('SS_OUTBOUND_PROXY');
             $options['CURLOPT_PROXYPORT'] = Environment::getEnv('SS_OUTBOUND_PROXY_PORT');
@@ -488,7 +510,7 @@ class MoodleWebservice
 
         curl_close($curl);
 
-        if (empty($this->error)) {
+        if ($this->error === null || ($this->error === '' || $this->error === '0')) {
             return $ret;
         }
 
@@ -510,7 +532,7 @@ class MoodleWebservice
     {
         ++$this->count;
         if (strlen($header) > 2) {
-            list($key, $value) = explode(' ', rtrim($header, "\r\n"), 2);
+            [$key, $value] = explode(' ', rtrim($header, "\r\n"), 2);
             $key = rtrim($key, ':');
             if (! empty($this->response[$key])) {
                 if (is_array($this->response[$key])) {
@@ -551,11 +573,10 @@ class MoodleWebservice
         if (! empty($this->proxy) || ! empty($options['proxy'])) {
             $this->setopt($this->proxy);
         }
+
         $this->setopt($options);
         // reset before set options
-        curl_setopt($curl, CURLOPT_HEADERFUNCTION, function ($ch, string $header): int {
-            return $this->formatHeader($ch, $header);
-        });
+        curl_setopt($curl, CURLOPT_HEADERFUNCTION, fn($ch, string $header): int => $this->formatHeader($ch, $header));
 
         if (empty($this->header)) {
             $this->setHeader([
@@ -564,12 +585,14 @@ class MoodleWebservice
                 'Connection: keep-alive',
             ]);
         }
+
         curl_setopt($curl, CURLOPT_HTTPHEADER, $this->header);
 
         foreach ($this->options as $name => $val) {
             if (is_string($name)) {
                 $name = constant(strtoupper($name));
             }
+
             curl_setopt($curl, $name, $val);
         }
 
@@ -591,11 +614,12 @@ class MoodleWebservice
             if (is_object($v)) {
                 $v = (array) $v;
             }
+
             if (is_array($v)) { //the value is an array, call the function recursively
-                $newcurrentdata = $newcurrentdata . '[' . urlencode($k) . ']';
+                $newcurrentdata = $newcurrentdata . '[' . urlencode((string) $k) . ']';
                 $this->format_array_postdata_for_curlcall($v, $newcurrentdata, $data);
             } else { //add the POST parameter to the $data array
-                $data[] = $newcurrentdata . '[' . urlencode($k) . ']=' . urlencode($v);
+                $data[] = $newcurrentdata . '[' . urlencode((string) $k) . ']=' . urlencode((string) $v);
             }
         }
     }
@@ -613,16 +637,18 @@ class MoodleWebservice
         if (is_object($postdata)) {
             $postdata = (array) $postdata;
         }
+
         $data = [];
         foreach ($postdata as $k => $v) {
             if (is_object($v)) {
                 $v = (array) $v;
             }
+
             if (is_array($v)) {
-                $currentdata = urlencode($k);
+                $currentdata = urlencode((string) $k);
                 $this->format_array_postdata_for_curlcall($v, $currentdata, $data);
             } else {
-                $data[] = urlencode($k) . '=' . urlencode($v);
+                $data[] = urlencode((string) $k) . '=' . urlencode((string) $v);
             }
         }
 
@@ -641,6 +667,7 @@ class MoodleWebservice
         if (is_array($params)) {
             $params = $this->format_postdata_for_curlcall($params);
         }
+
         $options['CURLOPT_POSTFIELDS'] = $params;
 
         return $this->request($url, $options);
@@ -656,7 +683,7 @@ class MoodleWebservice
     {
         $options['CURLOPT_HTTPGET'] = 1;
 
-        if (! empty($params)) {
+        if ($params !== null && $params !== []) {
             $url .= (false !== stripos($url, '?')) ? '&' : '?';
             $url .= http_build_query($params, '', '&');
         }
@@ -676,6 +703,7 @@ class MoodleWebservice
         if (! is_file($file)) {
             return null;
         }
+
         $fp = fopen($file, 'r');
         $size = filesize($file);
         $options['CURLOPT_PUT'] = 1;
@@ -684,6 +712,7 @@ class MoodleWebservice
         if (! isset($this->options['CURLOPT_USERPWD'])) {
             $this->setopt(['CURLOPT_USERPWD' => 'anonymous: noreply@moodle.org']);
         }
+
         $ret = $this->request($url, $options);
         fclose($fp);
 

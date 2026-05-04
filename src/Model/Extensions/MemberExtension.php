@@ -2,16 +2,16 @@
 
 namespace Sunnysideup\Moodle\Model\Extensions;
 
+use SilverStripe\Core\Extension;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataExtension;
 use SilverStripe\Security\Group;
 
 use SilverStripe\Core\Injector\Injector;
 
 use Sunnysideup\Moodle\DoMoodleThings;
 
-class MemberExtension extends DataExtension
+class MemberExtension extends Extension
 {
     private static $db = [
         'MoodleUid' => 'Int',
@@ -37,7 +37,7 @@ class MemberExtension extends DataExtension
         $owner = $this->getOwner();
         $username = $owner->FirstName. ' ' . $owner->Surname;
         $username = preg_replace("/[^A-Za-z0-9]/", '_', $username);
-        return strtolower(substr($username, 0, 20) . '_' . $owner->ID);
+        return strtolower(substr((string) $username, 0, 20) . '_' . $owner->ID);
     }
 
     public function IsRegisteredOnMoodle(): bool
@@ -52,7 +52,7 @@ class MemberExtension extends DataExtension
 
     public function IsRegisteredOnCourse(Group $group): bool
     {
-        return $this->owner->Groups()->filter(['ID' => $group->ID])->count() > 0;
+        return $this->getOwner()->Groups()->filter(['ID' => $group->ID])->count() > 0;
     }
 
      /**
@@ -66,6 +66,7 @@ class MemberExtension extends DataExtension
             $obj = Injector::inst()->get(DoMoodleThings::class);
             $obj->addUser($this->getOwner());
         }
+
         if($this->getOwner()->exists()) {
             $fields->addFieldsToTab(
                 'Root.Moodle',

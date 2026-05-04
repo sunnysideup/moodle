@@ -2,42 +2,26 @@
 
 namespace Sunnysideup\Moodle\Model\Extensions;
 
+use SilverStripe\Core\Extension;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 use SilverStripe\Forms\ReadonlyField;
-use SilverStripe\ORM\DataExtension;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 
-class GroupExtension extends DataExtension
+class GroupExtension extends Extension
 {
-    /**
-     * @var string
-     */
-    private const MOODLE_PARENT_GROUP_CODE = 'MOODLES';
+    private const string MOODLE_PARENT_GROUP_CODE = 'MOODLES';
 
-    /**
-     * @var string
-     */
-    private const MOODLE_PARENT_GROUP_NAME = 'Moodle Groups';
+    private const string MOODLE_PARENT_GROUP_NAME = 'Moodle Groups';
 
-    /**
-     * @var string
-     */
-    private const MOODLE_PARENT_GROUP_EXPLANATION = 'This group holds all the Moodle Courses';
+    private const string MOODLE_PARENT_GROUP_EXPLANATION = 'This group holds all the Moodle Courses';
 
-    /**
-     * @var string
-     */
-    private const MOODLE_NAME_POST_FIX = '- COURSE';
+    private const string MOODLE_NAME_POST_FIX = '- COURSE';
 
-    /**
-     * @var string
-     */
-    private const MOODLE_GROUP_EXPLANATION = 'This group shows the members that are part of a Moodle Course';
+    private const string MOODLE_GROUP_EXPLANATION = 'This group shows the members that are part of a Moodle Course';
 
     private static $db = [
         'MoodleUid' => 'Int',
@@ -54,7 +38,7 @@ class GroupExtension extends DataExtension
 
     public function updateCMSFields(FieldList $fields)
     {
-        $owner = $this->owner;
+        $owner = $this->getOwner();
         $fieldRepository =
         $fields->addFieldsToTab(
             'Root.Moodle',
@@ -78,12 +62,12 @@ class GroupExtension extends DataExtension
                 ReadonlyField::create(
                     'StartDate',
                     'Start Date',
-                    $this->owner->StartDateNice()
+                    $this->getOwner()->StartDateNice()
                 ),
                 ReadonlyField::create(
                     'EndDate',
                     'End Date',
-                    $this->owner->EndDateNice()
+                    $this->getOwner()->EndDateNice()
                 ),
             ]
         );
@@ -93,24 +77,24 @@ class GroupExtension extends DataExtension
 
     public function IsRegisteredOnCourse(?Member $member = null): bool
     {
-        if (! $member) {
+        if (!$member instanceof Member) {
             $member = Security::getCurrentUser();
         }
 
-        return $this->owner->Members()->filter(['ID' => $member->ID ?? 0])->count() > 0;
+        return $this->getOwner()->Members()->filter(['ID' => $member->ID ?? 0])->count() > 0;
     }
 
     public function onBeforeWrite()
     {
-        parent::onBeforeWrite();
-        if ($this->owner->MoodleUid) {
-            $holderGroup = $this->owner->findOrCreateMoodleHolderGroup();
-            $this->owner->Locked = true;
-            $this->owner->ParentID = $holderGroup->ID;
-            if (! strpos($this->owner->Title, self::MOODLE_NAME_POST_FIX)) {
-                $this->owner->Title .= ' ' . self::MOODLE_NAME_POST_FIX;
+        if ($this->getOwner()->MoodleUid) {
+            $holderGroup = $this->getOwner()->findOrCreateMoodleHolderGroup();
+            $this->getOwner()->Locked = true;
+            $this->getOwner()->ParentID = $holderGroup->ID;
+            if (! strpos((string) $this->getOwner()->Title, self::MOODLE_NAME_POST_FIX)) {
+                $this->getOwner()->Title .= ' ' . self::MOODLE_NAME_POST_FIX;
             }
-            $this->owner->Description = self::MOODLE_GROUP_EXPLANATION;
+
+            $this->getOwner()->Description = self::MOODLE_GROUP_EXPLANATION;
         }
     }
 
@@ -119,10 +103,11 @@ class GroupExtension extends DataExtension
         $id = $moodleData['id'] ?? 0;
         if ($id) {
             $filter = ['MoodleUid' => $id];
-            $group = DataObject::get_one(Group::class, $filter);
+            $group = Group::get()->setUseCache(true)->filter($filter)->first();
             if (! $group) {
                 $group = Group::create($filter);
             }
+
             $group->Title = $moodleData['displayname'] ?? '';
             $group->Description = strip_tags($moodleData['summary'] ?? '');
             $group->DisplayName = $moodleData['displayname'] ?? '';
@@ -150,7 +135,7 @@ class GroupExtension extends DataExtension
      */
     public function canDelete($member)
     {
-        if ($this->owner->findOrCreateMoodleHolderGroup()->ID === $this->owner->ID || $this->owner->MoodleUid) {
+        if ($this->getOwner()->findOrCreateMoodleHolderGroup()->ID === $this->getOwner()->ID || $this->getOwner()->MoodleUid) {
             return false;
         }
 
@@ -170,7 +155,7 @@ class GroupExtension extends DataExtension
      */
     public function canEdit($member)
     {
-        if ($this->owner->findOrCreateMoodleHolderGroup()->ID === $this->owner->ID) {
+        if ($this->getOwner()->findOrCreateMoodleHolderGroup()->ID === $this->getOwner()->ID) {
             return false;
         }
 
@@ -180,26 +165,27 @@ class GroupExtension extends DataExtension
     public function findOrCreateMoodleHolderGroup(): Group
     {
         $filter = ['Code' => self::MOODLE_PARENT_GROUP_CODE];
-        $group = DataObject::get_one(Group::class, $filter);
+        $group = Group::get()->setUseCache(true)->filter($filter)->first();
         if (! $group) {
             $group = Group::create($filter);
         }
+
         $group->Sort = 99999;
         $group->Locked = true;
         $group->Title = self::MOODLE_PARENT_GROUP_NAME;
         $group->Description = self::MOODLE_PARENT_GROUP_EXPLANATION;
         $group->write();
 
-        return DataObject::get_one(Group::class, $filter);
+        return Group::get()->setUseCache(true)->filter($filter)->first();
     }
 
     public function StartDateNice()
     {
-        return $this->owner->StartDateTs ? date('Y-m-d', $this->owner->StartDateTs) : 'n/a';
+        return $this->getOwner()->StartDateTs ? date('Y-m-d', $this->getOwner()->StartDateTs) : 'n/a';
     }
 
     public function EndDateNice()
     {
-        return $this->owner->EndDateTs ? date('Y-m-d', $this->owner->EndDateTs) : 'n/a';
+        return $this->getOwner()->EndDateTs ? date('Y-m-d', $this->getOwner()->EndDateTs) : 'n/a';
     }
 }

@@ -7,8 +7,6 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Security\Member;
 
-use SilverStripe\ORM\DataObject;
-
 class UserToMoodleUserConversionApi
 {
     use Configurable;
@@ -49,6 +47,7 @@ class UserToMoodleUserConversionApi
             $type = $details['Type'];
             $returnArray[$moodleField] = $this->getValueForMoodle($member, $ssField, $type);
         }
+
         //fix username
         $returnArray['username'] = $member->getMoodleUsername();
         $array['customfields'] = [];
@@ -61,9 +60,11 @@ class UserToMoodleUserConversionApi
                 'value' => $this->getValueForMoodle($member, $ssField, $type),
             ];
         }
+
         if ($createPassword) {
             $returnArray['createpassword'] = 1;
         }
+
         // $returnArray['createpassword'] = 0;
 
         return $returnArray;
@@ -79,6 +80,7 @@ class UserToMoodleUserConversionApi
             $value = $inputArray[$moodleField] ?? null;
             $returnArray[$ssField] = $this->getValueForSilverstripe($ssField, $value);
         }
+
         $array['customfields'] = [];
         foreach ($this->config()->get('custom_fields') as $details) {
             $ssField = $details['SilverstripeField'];
@@ -105,22 +107,13 @@ class UserToMoodleUserConversionApi
         } else {
             $val = $obj->{$ssField};
         }
-        switch (strtolower($type)) {
-            case 'int':
-            case 'integer':
-                $val = (int) $val;
 
-                break;
-            case 'bool':
-            case 'boolean':
-                $val = $val ? 1 : 0;
-
-                break;
-            case 'string':
-            default:
-                //important to trim here!
-                $val = trim((string) $val);
-        }
+        $val = match (strtolower($type)) {
+            'int', 'integer' => (int) $val,
+            'bool', 'boolean' => $val ? 1 : 0,
+            //important to trim here!
+            default => trim((string) $val),
+        };
 
         return $val;
     }
@@ -136,7 +129,7 @@ class UserToMoodleUserConversionApi
 
     protected function isRelation($ssField): bool
     {
-        return (bool) strpos($ssField, '.');
+        return (bool) strpos((string) $ssField, '.');
     }
 
     protected function convertRelationToValue($obj, string $ssField, string $type)
@@ -158,7 +151,8 @@ class UserToMoodleUserConversionApi
         foreach ($methods as $method) {
             $obj = $obj->{$method}();
         }
-        $obj = DataObject::get_one($obj->ClassName, [$field => $value]);
+
+        $obj = $obj->ClassName::get()->setUseCache(true)->filter([$field => $value])->first();
         if ($obj) {
             return (int) $obj->ID;
         }

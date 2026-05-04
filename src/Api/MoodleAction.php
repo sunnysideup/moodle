@@ -77,6 +77,7 @@ abstract class MoodleAction
                 if ($this->resultTakeFirstEntry) {
                     $result = $result[0] ?? [];
                 }
+
                 if ($this->resultRelevantArrayKey) {
                     $result = $result[$this->resultRelevantArrayKey] ?? '';
                 }
@@ -84,10 +85,12 @@ abstract class MoodleAction
         } else {
             $result = '';
         }
+
         if ($result instanceof MoodleResponse) {
             $result = $result->getContent();
         }
-        switch (strtolower($this->resultVariableType)) {
+
+        switch (strtolower((string) $this->resultVariableType)) {
             case 'int':
             case 'integer':
                 $result = (int) $result;
@@ -144,14 +147,16 @@ abstract class MoodleAction
         if ($this->Config()->get('log')) {
             $obj = MoodleLog::get()->byID($id);
             if (! $obj) {
-                $obj = new MoodleLog();
+                $obj = MoodleLog::create();
             }
+
             $obj->IsSuccess = $result->isSuccess();
             if ($obj->IsSuccess) {
                 $obj->Result = serialize($result->getContent());
             } else {
                 $obj->Error = serialize($result->getError());
             }
+
             $obj->write();
         }
     }

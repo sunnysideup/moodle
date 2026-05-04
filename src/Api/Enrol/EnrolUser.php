@@ -55,16 +55,19 @@ class EnrolUser extends MoodleAction
 
             return false;
         }
-        if (2 === ! count($relevantData)) {
+
+        if (2 === ($relevantData === [])) {
             $this->recordValidateParamsError('$relevantData is expected to see exactly two parameters. Group and Member.');
 
             return false;
         }
+
         if (! isset($relevantData['Group']) && $relevantData['Group'] instanceof Group) {
             $this->recordValidateParamsError('$relevantData is expected to contain an integer for CourseId .');
 
             return false;
         }
+
         if (! isset($relevantData['Member']) && $relevantData['Member'] instanceof Group) {
             $this->recordValidateParamsError('$relevantData is expected to contain an integer for UserId .');
 

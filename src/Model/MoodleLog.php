@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\Moodle\Model;
 
+use Override;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
@@ -25,6 +26,7 @@ class MoodleLog extends DataObject
         'Error' => 'Text',
         'ErrorMessage' => 'Varchar',
     ];
+
     private static $summary_fields = [
         'Created' => 'When',
         'Member.Email' => 'User',
@@ -44,16 +46,19 @@ class MoodleLog extends DataObject
 
     private static $table_name = 'MoodleLog';
 
+    #[Override]
     public function canEdit($member = null)
     {
         return false;
     }
 
+    #[Override]
     public function canDelete($member = null)
     {
         return false;
     }
 
+    #[Override]
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
@@ -67,14 +72,12 @@ class MoodleLog extends DataObject
 
         // remove passwords
         try {
-            if ($this->Params) {
-                if (strpos($this->Params, 'password')) {
-                    $array = unserialize($this->Params);
-                    $array = $this->removeKey($array, 'Password');
-                    $this->Params = serialize($array);
-                }
+            if ($this->Params && strpos($this->Params, 'password')) {
+                $array = unserialize($this->Params);
+                $array = $this->removeKey($array, 'Password');
+                $this->Params = serialize($array);
             }
-        } catch (Exception $e) {
+        } catch (Exception) {
             echo '<h2>error with MoodleLog #' . $this->ID . '</h2>';
             print_r($this->Params);
         }
@@ -83,36 +86,36 @@ class MoodleLog extends DataObject
         try {
             if ($this->Error && ! $this->ErrorMessage) {
                 $string = unserialize($this->Error);
-                $debuginfoArray = json_decode($string, true);
+                $debuginfoArray = json_decode((string) $string, true);
                 $this->ErrorMessage = $debuginfoArray['debuginfo'] ?? '';
             }
-        } catch (Exception $e) {
+        } catch (Exception) {
             echo '<h2>error with MoodleLog #' . $this->ID . '</h2>';
             print_r($this->Error);
             //do nothing
         }
     }
 
-    public function onAfterWrite()
+    #[Override]
+    protected function onAfterWrite()
     {
         parent::onAfterWrite();
         $this->DeleteOldData();
-        if ((bool) $this->IsSuccess === false) {
-            if ((bool) $this->ErrorEmailSent === (bool) false) {
-                $adminEmail = Config::inst()->get(Email::class, 'admin_email');
-                Email::create(
-                    $adminEmail,
-                    $adminEmail,
-                    'Moodle Connection Error',
-                    'There was an error in connection with Moodle,
+        if ((bool) $this->IsSuccess === false && (bool) $this->ErrorEmailSent === (bool) false) {
+            $adminEmail = Config::inst()->get(Email::class, 'admin_email');
+            Email::create(
+                $adminEmail,
+                $adminEmail,
+                'Moodle Connection Error',
+                'There was an error in connection with Moodle,
                     see: <a href="' . Director::absoluteURL($this->CMSEditLink()) . '">' . Director::absoluteURL($this->CMSEditLink()) . '</a>'
-                )->send();
-                $this->ErrorEmailSent = true;
-                $this->write();
-            }
+            )->send();
+            $this->ErrorEmailSent = true;
+            $this->write();
         }
     }
 
+    #[Override]
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
@@ -127,9 +130,11 @@ class MoodleLog extends DataObject
             $member = $fields->dataFieldByName('MemberID')
                 ->setDescription('<a href="/admin/security/EditForm/field/Members/item/' . $this->MemberID . '/edit">' . $this->Member()->Email . '</a>');
         }
+
         return $fields;
     }
 
+    #[Override]
     public function CMSEditLink(): string
     {
         return '/admin/moodle/Sunnysideup-Moodle-Model-MoodleLog/EditForm/field/Sunnysideup-Moodle-Model-MoodleLog/item/' . $this->ID . '/edit';
@@ -154,7 +159,7 @@ class MoodleLog extends DataObject
     public function DeleteOldData()
     {
         $cutOffDate = date('Y-m-d H:i:s', strtotime('-1 year'));
-        $oldLogs = self::get()->filter('Created:LessThan', $cutOffDate)->limit(200);
+        $oldLogs = self::get()->filter(['Created:LessThan' => $cutOffDate])->limit(200);
         foreach ($oldLogs as $log) {
             $log->delete();
         }

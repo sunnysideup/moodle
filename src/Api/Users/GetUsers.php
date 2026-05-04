@@ -25,6 +25,7 @@ class GetUsers extends MoodleAction
             } else {
                 $value = $relevantData->$silverstripeFieldNameOrMethod;
             }
+
             if($value) {
                 $params = [
                     'field' => $moodleFieldName,
