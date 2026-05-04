@@ -9,7 +9,7 @@
   ],
   "license": "BSD-3-Clause",
   "require": {
-    "silverstripe/framework": "^4.0 || ^5.0",
+    "silverstripe/framework": "^6.0",
     "llagerlof/moodlerest": "^2.4"
   },
   "autoload": {
