@@ -7,7 +7,6 @@ use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 use SilverStripe\Forms\ReadonlyField;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
@@ -119,7 +118,7 @@ class GroupExtension extends Extension
         $id = $moodleData['id'] ?? 0;
         if ($id) {
             $filter = ['MoodleUid' => $id];
-            $group = DataObject::get_one(Group::class, $filter);
+            $group = Group::get()->setUseCache(true)->filter($filter)->first();
             if (! $group) {
                 $group = Group::create($filter);
             }
@@ -181,7 +180,7 @@ class GroupExtension extends Extension
     public function findOrCreateMoodleHolderGroup(): Group
     {
         $filter = ['Code' => self::MOODLE_PARENT_GROUP_CODE];
-        $group = DataObject::get_one(Group::class, $filter);
+        $group = Group::get()->setUseCache(true)->filter($filter)->first();
         if (! $group) {
             $group = Group::create($filter);
         }
@@ -192,7 +191,7 @@ class GroupExtension extends Extension
         $group->Description = self::MOODLE_PARENT_GROUP_EXPLANATION;
         $group->write();
 
-        return DataObject::get_one(Group::class, $filter);
+        return Group::get()->setUseCache(true)->filter($filter)->first();
     }
 
     public function StartDateNice()

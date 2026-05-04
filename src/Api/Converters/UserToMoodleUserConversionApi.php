@@ -7,8 +7,6 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Security\Member;
 
-use SilverStripe\ORM\DataObject;
-
 class UserToMoodleUserConversionApi
 {
     use Configurable;
@@ -154,7 +152,7 @@ class UserToMoodleUserConversionApi
             $obj = $obj->{$method}();
         }
 
-        $obj = DataObject::get_one($obj->ClassName, [$field => $value]);
+        $obj = $obj->ClassName::get()->setUseCache(true)->filter([$field => $value])->first();
         if ($obj) {
             return (int) $obj->ID;
         }

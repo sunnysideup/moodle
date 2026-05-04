@@ -8,7 +8,6 @@ use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Environment;
 use SilverStripe\ORM\DataList;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
@@ -148,7 +147,7 @@ class DoMoodleThings
 
     public function getGroupFromMoodleCourseId(int $courseId): ?Group
     {
-        return DataObject::get_one(Group::class, ['MoodleUid' => $courseId]);
+        return Group::get()->setUseCache(true)->filter(['MoodleUid' => $courseId])->first();
     }
 
     public function enrolUserOnCourse(Group $group, ?Member $member = null): bool
