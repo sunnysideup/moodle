@@ -53,6 +53,7 @@ class MoodleLogErrorList extends BuildTask
                 ];
             }
         }
+
         foreach ($this->byEmail as $email => $items) {
             $output->writeln('<hr />');
             DB::alteration_message('<strong>' . $email . '</strong>');
@@ -60,6 +61,7 @@ class MoodleLogErrorList extends BuildTask
                 DB::alteration_message('...  ... <a href="' . $item['Link'] . '">' . $item['Created'] . ': ' . $item['ErrorMessage'] . '</a>');
             }
         }
+
         return Command::SUCCESS;
     }
 }
