@@ -55,6 +55,7 @@ class UpdateUser extends CreateUser
             if ($relevantData->MoodleUid) {
                 return true;
             }
+
             $this->recordValidateParamsError('This user does not have a MoodleUid.');
 
             return false;

@@ -11,23 +11,17 @@ use SilverStripe\ORM\DataObject;
  */
 class MoodleResponse
 {
-    private $error;
-
-    private $content;
-
-    public function __construct($content, $error)
+    public function __construct(private $content, private $error)
     {
-        $this->error = $error;
-        $this->content = $content;
-        if (is_string($content)) {
+        if (is_string($this->content)) {
             $tmppar = json_decode($this->content);
             if (is_object($tmppar) && (property_exists($tmppar, 'exception') && null !== $tmppar->exception)) {
-                $this->error = $content;
+                $this->error = $this->content;
                 $this->content = null;
             }
         } else {
-            $this->error = serialize($content);
-            $this->error .= serialize($error);
+            $this->error = serialize($this->content);
+            $this->error .= serialize($this->error);
         }
     }
 
@@ -73,7 +67,7 @@ class MoodleResponse
     public function getContentAsArray(): array
     {
         if (! $this->hasError()) {
-            return json_decode($this->content, true);
+            return json_decode((string) $this->content, true);
         }
 
         return [];
@@ -92,6 +86,7 @@ class MoodleResponse
             if ($array instanceof \DataObject) {
                 return $array;
             }
+
             $do = DataObject::create();
             foreach (get_object_vars($array) as $key => $obj) {
                 if ('__Type' === $key) {
@@ -105,6 +100,7 @@ class MoodleResponse
 
             return $do;
         }
+
         if (is_array($array)) {
             $dataList = ArrayList::create();
             foreach ($array as $obj) {

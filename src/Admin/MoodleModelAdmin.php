@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sunnysideup\Moodle\Admin;
 
 use Sunnysideup\Moodle\Model\MoodleLog;

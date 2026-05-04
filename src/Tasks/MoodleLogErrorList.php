@@ -2,7 +2,6 @@
 
 namespace Sunnysideup\Moodle\Model;
 
-use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\BuildTask;
 
 use SilverStripe\ORM\DB;
@@ -15,7 +14,10 @@ class MoodleLogErrorList extends BuildTask
 
     protected $description = 'Run through all the errors and summarise per member in reverse chronological order.';
 
-    protected $enabled = true;
+    /**
+     * @config
+     */
+    private static $is_enabled = true;
 
     protected $byEmail = [];
 
@@ -40,6 +42,7 @@ class MoodleLogErrorList extends BuildTask
                 if (! isset($this->byEmail[$email])) {
                     $this->byEmail[$email] = [];
                 }
+
                 $this->byEmail[$email][] = [
                     'ErrorMessage' => $log->ErrorMessage,
                     'Created' => $log->Created,
@@ -47,6 +50,7 @@ class MoodleLogErrorList extends BuildTask
                 ];
             }
         }
+
         foreach ($this->byEmail as $email => $items) {
             echo '<hr />';
             DB::alteration_message('<strong>' . $email . '</strong>');

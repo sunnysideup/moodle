@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sunnysideup\Moodle\Api\Courses;
 
 use Sunnysideup\Moodle\Api\MoodleAction;
