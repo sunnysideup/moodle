@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\Moodle\Model;
 
+use Override;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
@@ -45,16 +46,19 @@ class MoodleLog extends DataObject
 
     private static $table_name = 'MoodleLog';
 
+    #[Override]
     public function canEdit($member = null)
     {
         return false;
     }
 
+    #[Override]
     public function canDelete($member = null)
     {
         return false;
     }
 
+    #[Override]
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
@@ -92,6 +96,7 @@ class MoodleLog extends DataObject
         }
     }
 
+    #[Override]
     protected function onAfterWrite()
     {
         parent::onAfterWrite();
@@ -110,6 +115,7 @@ class MoodleLog extends DataObject
         }
     }
 
+    #[Override]
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
@@ -128,6 +134,7 @@ class MoodleLog extends DataObject
         return $fields;
     }
 
+    #[Override]
     public function CMSEditLink(): string
     {
         return '/admin/moodle/Sunnysideup-Moodle-Model-MoodleLog/EditForm/field/Sunnysideup-Moodle-Model-MoodleLog/item/' . $this->ID . '/edit';

@@ -13,30 +13,15 @@ use SilverStripe\Security\Security;
 
 class GroupExtension extends Extension
 {
-    /**
-     * @var string
-     */
-    private const MOODLE_PARENT_GROUP_CODE = 'MOODLES';
+    private const string MOODLE_PARENT_GROUP_CODE = 'MOODLES';
 
-    /**
-     * @var string
-     */
-    private const MOODLE_PARENT_GROUP_NAME = 'Moodle Groups';
+    private const string MOODLE_PARENT_GROUP_NAME = 'Moodle Groups';
 
-    /**
-     * @var string
-     */
-    private const MOODLE_PARENT_GROUP_EXPLANATION = 'This group holds all the Moodle Courses';
+    private const string MOODLE_PARENT_GROUP_EXPLANATION = 'This group holds all the Moodle Courses';
 
-    /**
-     * @var string
-     */
-    private const MOODLE_NAME_POST_FIX = '- COURSE';
+    private const string MOODLE_NAME_POST_FIX = '- COURSE';
 
-    /**
-     * @var string
-     */
-    private const MOODLE_GROUP_EXPLANATION = 'This group shows the members that are part of a Moodle Course';
+    private const string MOODLE_GROUP_EXPLANATION = 'This group shows the members that are part of a Moodle Course';
 
     private static $db = [
         'MoodleUid' => 'Int',
