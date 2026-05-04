@@ -102,12 +102,11 @@ class GroupExtension extends Extension
 
     public function onBeforeWrite()
     {
-        parent::onBeforeWrite();
         if ($this->getOwner()->MoodleUid) {
             $holderGroup = $this->getOwner()->findOrCreateMoodleHolderGroup();
             $this->getOwner()->Locked = true;
             $this->getOwner()->ParentID = $holderGroup->ID;
-            if (! strpos($this->getOwner()->Title, self::MOODLE_NAME_POST_FIX)) {
+            if (! strpos((string) $this->getOwner()->Title, self::MOODLE_NAME_POST_FIX)) {
                 $this->getOwner()->Title .= ' ' . self::MOODLE_NAME_POST_FIX;
             }
 

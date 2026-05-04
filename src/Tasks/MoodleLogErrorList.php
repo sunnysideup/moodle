@@ -2,6 +2,9 @@
 
 namespace Sunnysideup\Moodle\Model;
 
+use Symfony\Component\Console\Input\InputInterface;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Command\Command;
 use SilverStripe\Dev\BuildTask;
 
 use SilverStripe\ORM\DB;
@@ -10,9 +13,9 @@ use Sunnysideup\Moodle\Model\MoodleLog;
 
 class MoodleLogErrorList extends BuildTask
 {
-    protected $title = 'Check for Moodle Errors and list them (use ?all=1 to show all)';
+    protected string $title = 'Check for Moodle Errors and list them (use ?all=1 to show all)';
 
-    protected $description = 'Run through all the errors and summarise per member in reverse chronological order.';
+    protected static string $description = 'Run through all the errors and summarise per member in reverse chronological order.';
 
     /**
      * @config
@@ -21,7 +24,7 @@ class MoodleLogErrorList extends BuildTask
 
     protected $byEmail = [];
 
-    public function run($request)
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
         $totalCount = MoodleLog::get()->count();
         $logs = MoodleLog::get()->filter(['IsSuccess' => false]);
@@ -50,13 +53,13 @@ class MoodleLogErrorList extends BuildTask
                 ];
             }
         }
-
         foreach ($this->byEmail as $email => $items) {
-            echo '<hr />';
+            $output->writeln('<hr />');
             DB::alteration_message('<strong>' . $email . '</strong>');
             foreach ($items as $item) {
                 DB::alteration_message('...  ... <a href="' . $item['Link'] . '">' . $item['Created'] . ': ' . $item['ErrorMessage'] . '</a>');
             }
         }
+        return Command::SUCCESS;
     }
 }

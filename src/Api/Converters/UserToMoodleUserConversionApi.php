@@ -109,6 +109,7 @@ class UserToMoodleUserConversionApi
         } else {
             $val = $obj->{$ssField};
         }
+
         $val = match (strtolower($type)) {
             'int', 'integer' => (int) $val,
             'bool', 'boolean' => $val ? 1 : 0,

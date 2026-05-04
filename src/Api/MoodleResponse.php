@@ -2,7 +2,7 @@
 
 namespace Sunnysideup\Moodle\Api;
 
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 
