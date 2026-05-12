@@ -71,7 +71,7 @@ class MoodleWebservice
      * Protected constructor to prevent creating a new instance of the
      * *Singleton* via the 'connect' operator from outside of this class.
      */
-    protected function __construct()
+    public function __construct()
     {
         if (Controller::curr()->getRequest()->getVar('debug') && (Director::isDev() || Permission::check('ADMIN'))) {
             $this->debug = true;
@@ -516,7 +516,7 @@ class MoodleWebservice
 
         return $this->error;
         // exception is not ajax friendly
-            //throw new moodle_exception($this->error, 'curl');
+        //throw new moodle_exception($this->error, 'curl');
     }
 
     /**
@@ -576,7 +576,7 @@ class MoodleWebservice
 
         $this->setopt($options);
         // reset before set options
-        curl_setopt($curl, CURLOPT_HEADERFUNCTION, fn($ch, string $header): int => $this->formatHeader($ch, $header));
+        curl_setopt($curl, CURLOPT_HEADERFUNCTION, fn ($ch, string $header): int => $this->formatHeader($ch, $header));
 
         if (empty($this->header)) {
             $this->setHeader([
